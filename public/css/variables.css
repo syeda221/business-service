@@ -1,0 +1,86 @@
+/**
+ * Premium SaaS Design Tokens
+ * central variables for typography, colors, spacing, border radiuses, and soft shadows.
+ */
+:root {
+    /* Font Family */
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* Color Palette - Refined Indigo & Slate Gray */
+    --color-primary: #4f46e5;         /* Premium Indigo */
+    --color-primary-hover: #4338ca;   /* Deep Indigo */
+    --color-primary-light: #e0e7ff;   /* Soft Indigo Tint */
+    
+    --color-success: #10b981;         /* Emerald */
+    --color-success-light: #ecfdf5;
+    --color-success-dark: #065f46;
+
+    --color-warning: #f59e0b;         /* Amber */
+    --color-warning-light: #fef3c7;
+    --color-warning-dark: #92400e;
+
+    --color-danger: #ef4444;          /* Rose */
+    --color-danger-light: #fef2f2;
+    --color-danger-dark: #991b1b;
+
+    /* Neutrals */
+    --color-bg-base: #f8fafc;          /* Slate 50 - Layout Background */
+    --color-bg-card: #ffffff;          /* White - Cards & Modules */
+    --color-bg-sidebar: #0f172a;       /* Slate 900 - Premium Dark Sidebar */
+    --color-border: #e2e8f0;           /* Slate 200 - Borders */
+    --color-border-hover: #cbd5e1;     /* Slate 300 - Border hover */
+    
+    /* Text colors */
+    --color-text-primary: #0f172a;     /* Slate 900 */
+    --color-text-secondary: #475569;   /* Slate 600 */
+    --color-text-muted: #94a3b8;       /* Slate 400 */
+    --color-text-on-sidebar: #94a3b8;  /* Muted sidebar text */
+    --color-text-on-sidebar-active: #ffffff;
+    
+    /* Typography Scale */
+    --fs-xs: 0.75rem;     /* 12px */
+    --fs-sm: 0.875rem;    /* 14px */
+    --fs-base: 1rem;      /* 16px */
+    --fs-lg: 1.125rem;    /* 18px */
+    --fs-xl: 1.25rem;     /* 20px */
+    --fs-2xl: 1.5rem;     /* 24px */
+    --fs-3xl: 1.875rem;    /* 30px */
+
+    /* Font Weights */
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* Spacing Scale */
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 0.75rem;
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-8: 2rem;
+    --spacing-10: 2.5rem;
+    --spacing-12: 3rem;
+
+    /* Borders */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+
+    /* Soft Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.04), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+
+    /* Sidebar Dimensions */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 72px;
+    --header-height: 70px;
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
