@@ -27,9 +27,9 @@ class ServicesController extends Controller
         ],
         'product-hunting' => [
             'title' => 'Product Hunting & Sourcing',
-            'desc' => 'Product research, validation and supplier sourcing.',
-            'steps_count' => 0,
-            'view' => 'admin.services.placeholder'
+            'desc' => 'Research, validate and source profitable products from reliable suppliers and manufacturers.',
+            'steps_count' => 13,
+            'view' => 'admin.services.product_hunting'
         ],
         'marketplace-retail' => [
             'title' => 'Marketplace & Retail Services',
@@ -86,15 +86,23 @@ class ServicesController extends Controller
                     'completed' => $completedSteps,
                     'remaining' => $totalSteps - $completedSteps,
                 ];
-            } elseif ($key === 'branding-website') {
+            } elseif ($key === 'product-hunting') {
                 $payload = $progress->payload ?? [];
                 $completedSteps = 0;
-                $totalSteps = 5;
-                if (!empty($payload['selected_services'])) $completedSteps++; // Step 1
-                if (!empty($payload['brand_name'])) $completedSteps++;        // Step 2
-                if (!empty($payload['website_platform'])) $completedSteps++;  // Step 3
-                if (!empty($payload['ad_budget'])) $completedSteps++;         // Step 4
-                if ($progress->status === 'completed') $completedSteps = 5;
+                $totalSteps = 13;
+                if (!empty($payload['product_category'])) $completedSteps++;
+                if (!empty($payload['customer_segment'])) $completedSteps++;
+                if (!empty($payload['demand_level'])) $completedSteps++;
+                if (!empty($payload['competitor_records'])) $completedSteps++;
+                if (!empty($payload['est_selling_price'])) $completedSteps++;
+                if (!empty($payload['validation_status'])) $completedSteps++;
+                if (!empty($payload['supplier_records'])) $completedSteps++;
+                if (!empty($payload['ratings'])) $completedSteps++;
+                if (!empty($payload['sample_status'])) $completedSteps++;
+                if (!empty($payload['inspection_status'])) $completedSteps++;
+                if (!empty($payload['neg_status'])) $completedSteps++;
+                if (!empty($payload['mfg_status'])) $completedSteps++;
+                if ($progress->status === 'completed') $completedSteps = 13;
                 
                 $percentage = round(($completedSteps / $totalSteps) * 100);
                 $statsInfo = [
@@ -296,6 +304,187 @@ class ServicesController extends Controller
                         ];
                         break;
                 }
+            } elseif ($service_key === 'product-hunting') {
+                switch ($step) {
+                    case 1:
+                        $rules = [
+                            'product_category' => 'required|string',
+                            'product_idea' => 'required|string|max:255',
+                            'product_description' => 'required|string',
+                            'target_market' => 'required|array',
+                            'target_customer' => 'required|string',
+                            'selling_price' => 'required|numeric|min:0',
+                            'product_cost' => 'required|numeric|min:0',
+                            'profit_margin' => 'required|numeric|min:0|max:100',
+                            'initial_moq' => 'required|integer|min:1',
+                            'sourcing_type' => 'required|array',
+                            'customization_required' => 'required|in:yes,no',
+                            'customization_details' => 'required_if:customization_required,yes|nullable|string',
+                            'additional_requirements' => 'nullable|string',
+                        ];
+                        break;
+                    case 2:
+                        $rules = [
+                            'research_market' => 'required|array',
+                            'research_types' => 'required|array',
+                            'customer_segment' => 'required|string',
+                            'target_price_min' => 'required|numeric|min:0',
+                            'target_price_max' => 'required|numeric|min:0|gte:target_price_min',
+                            'research_keywords' => 'required|string',
+                            'competitor_urls' => 'required|array',
+                            'competitor_urls.*' => 'required|url',
+                            'research_notes' => 'nullable|string',
+                            'research_findings' => 'required|string',
+                        ];
+                        break;
+                    case 3:
+                        $rules = [
+                            'demand_level' => 'required|string',
+                            'demand_trend' => 'required|string',
+                            'search_interest' => 'required|string',
+                            'monthly_demand' => 'required|integer|min:0',
+                            'seasonality' => 'required|in:yes,no',
+                            'peak_season' => 'required_if:seasonality,yes|nullable|string',
+                            'demand_analysis' => 'required|string',
+                            'demand_score' => 'required|numeric|min:0|max:100',
+                        ];
+                        break;
+                    case 4:
+                        $rules = [
+                            'competitor_records' => 'required|array',
+                            'competitor_records.*.name' => 'required|string',
+                            'competitor_records.*.product_name' => 'required|string',
+                            'competitor_records.*.product_url' => 'required|url',
+                            'competitor_records.*.selling_price' => 'required|numeric|min:0',
+                            'competitor_records.*.rating' => 'required|numeric|min:0|max:5',
+                            'competitor_records.*.reviews' => 'required|integer|min:0',
+                            'competitor_records.*.features' => 'required|string',
+                            'competitor_records.*.position' => 'required|string',
+                            'competitor_records.*.notes' => 'nullable|string',
+                            'competitor_strengths' => 'required|string',
+                            'competitor_weaknesses' => 'required|string',
+                            'competitive_advantage' => 'required|string',
+                        ];
+                        break;
+                    case 5:
+                        $rules = [
+                            'est_product_cost' => 'required|numeric|min:0',
+                            'est_manufacturing_cost' => 'required|numeric|min:0',
+                            'est_packaging_cost' => 'required|numeric|min:0',
+                            'est_shipping_cost' => 'required|numeric|min:0',
+                            'est_import_duties' => 'required|numeric|min:0',
+                            'est_marketplace_fees' => 'required|numeric|min:0',
+                            'est_advertising_cost' => 'required|numeric|min:0',
+                            'est_other_costs' => 'required|numeric|min:0',
+                            'est_selling_price' => 'required|numeric|min:0',
+                        ];
+                        break;
+                    case 6:
+                        $rules = [
+                            'validation_status' => 'required|string',
+                            'potential_level' => 'required|string',
+                            'val_demand_score' => 'required|numeric|min:0|max:100',
+                            'val_competition_score' => 'required|numeric|min:0|max:100',
+                            'val_profitability_score' => 'required|numeric|min:0|max:100',
+                            'validation_checklist' => 'required|array',
+                            'validation_notes' => 'nullable|string',
+                            'final_recommendation' => 'required|string',
+                        ];
+                        break;
+                    case 7:
+                        $rules = [
+                            'supplier_records' => 'required|array',
+                            'supplier_records.*.name' => 'required|string',
+                            'supplier_records.*.type' => 'required|string',
+                            'supplier_records.*.country' => 'required|string',
+                            'supplier_records.*.website' => 'required|url',
+                            'supplier_records.*.contact_person' => 'required|string',
+                            'supplier_records.*.email' => 'required|email',
+                            'supplier_records.*.phone' => 'required|string',
+                            'supplier_records.*.product_url' => 'required|url',
+                            'supplier_records.*.moq' => 'required|integer|min:0',
+                            'supplier_records.*.unit_price' => 'required|numeric|min:0',
+                            'supplier_records.*.lead_time' => 'required|string',
+                            'supplier_records.*.customization' => 'required|in:yes,no',
+                            'supplier_records.*.private_label' => 'required|in:yes,no',
+                            'supplier_records.*.white_label' => 'required|in:yes,no',
+                            'supplier_records.*.certifications' => 'required|array',
+                            'supplier_records.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 8:
+                        $rules = [
+                            'ratings' => 'required|array',
+                            'preferred_supplier' => 'required|string',
+                            'backup_supplier' => 'required|string',
+                            'comparison_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 9:
+                        $rules = [
+                            'sample_required' => 'required|in:yes,no',
+                            'sample_supplier' => 'required_if:sample_required,yes|nullable|string',
+                            'sample_qty' => 'required_if:sample_required,yes|nullable|integer|min:1',
+                            'sample_cost' => 'required_if:sample_required,yes|nullable|numeric|min:0',
+                            'sample_shipping_cost' => 'required_if:sample_required,yes|nullable|numeric|min:0',
+                            'sample_request_date' => 'required_if:sample_required,yes|nullable|date',
+                            'sample_expected_date' => 'required_if:sample_required,yes|nullable|date',
+                            'sample_status' => 'required|string',
+                            'sample_tracking_number' => 'nullable|string',
+                            'sample_tracking_url' => 'nullable|url',
+                            'sample_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 10:
+                        $rules = [
+                            'inspection_status' => 'required|string',
+                            'quality_checklist' => 'required|array',
+                            'defects_found' => 'required|in:yes,no',
+                            'defect_details' => 'required_if:defects_found,yes|nullable|string',
+                            'quality_score' => 'required|numeric|min:0|max:100',
+                            'inspection_date' => 'required|date',
+                            'inspector_notes' => 'nullable|string',
+                            'final_quality_decision' => 'required|string',
+                        ];
+                        break;
+                    case 11:
+                        $rules = [
+                            'neg_supplier' => 'required|string',
+                            'neg_initial_price' => 'required|numeric|min:0',
+                            'neg_final_price' => 'required|numeric|min:0',
+                            'neg_initial_moq' => 'required|integer|min:1',
+                            'neg_final_moq' => 'required|integer|min:1',
+                            'neg_initial_lead_time' => 'required|integer|min:1',
+                            'neg_final_lead_time' => 'required|integer|min:1',
+                            'neg_status' => 'required|string',
+                            'payment_terms' => 'required|string',
+                            'shipping_terms' => 'required|string',
+                            'neg_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 12:
+                        $rules = [
+                            'mfg_supplier' => 'required|string',
+                            'mfg_product_type' => 'required|string',
+                            'mfg_quantity' => 'required|integer|min:1',
+                            'mfg_unit_cost' => 'required|numeric|min:0',
+                            'mfg_start_date' => 'required|date',
+                            'mfg_expected_date' => 'required|date',
+                            'mfg_status' => 'required|string',
+                            'mfg_packaging_required' => 'required|in:yes,no',
+                            'mfg_labeling_required' => 'required|in:yes,no',
+                            'mfg_branding_required' => 'required|in:yes,no',
+                            'mfg_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 13:
+                        $rules = [
+                            'final_approval_status' => 'required|string',
+                            'final_decision' => 'required|string',
+                            'final_notes' => 'nullable|string',
+                        ];
+                        break;
+                }
             }
         }
 
@@ -308,6 +497,55 @@ class ServicesController extends Controller
             // If saving draft or no validation, merge all inputs except csrf, step, action
             $allInputs = $request->except(['_token', 'step', 'action']);
             $currentPayload = array_merge($currentPayload, $allInputs);
+        }
+
+        // Process dynamic calculations for product hunting
+        if ($service_key === 'product-hunting') {
+            if ($step === 5) {
+                $totalCost = (float)($currentPayload['est_product_cost'] ?? 0) +
+                             (float)($currentPayload['est_manufacturing_cost'] ?? 0) +
+                             (float)($currentPayload['est_packaging_cost'] ?? 0) +
+                             (float)($currentPayload['est_shipping_cost'] ?? 0) +
+                             (float)($currentPayload['est_import_duties'] ?? 0) +
+                             (float)($currentPayload['est_marketplace_fees'] ?? 0) +
+                             (float)($currentPayload['est_advertising_cost'] ?? 0) +
+                             (float)($currentPayload['est_other_costs'] ?? 0);
+                
+                $sellingPrice = (float)($currentPayload['est_selling_price'] ?? 0);
+                $profit = $sellingPrice - $totalCost;
+                $margin = $sellingPrice > 0 ? ($profit / $sellingPrice) * 100 : 0;
+                $roi = $totalCost > 0 ? ($profit / $totalCost) * 100 : 0;
+                
+                $currentPayload['cal_total_cost'] = round($totalCost, 2);
+                $currentPayload['cal_expected_profit'] = round($profit, 2);
+                $currentPayload['cal_profit_margin'] = round($margin, 2);
+                $currentPayload['cal_roi'] = round($roi, 2);
+            } elseif ($step === 6) {
+                $demand = (float)($currentPayload['val_demand_score'] ?? 0);
+                $comp = (float)($currentPayload['val_competition_score'] ?? 0);
+                $profit = (float)($currentPayload['val_profitability_score'] ?? 0);
+                $currentPayload['cal_overall_score'] = round(($demand + $comp + $profit) / 3, 2);
+            } elseif ($step === 8) {
+                $ratings = $currentPayload['ratings'] ?? [];
+                $calculatedRatings = [];
+                foreach ($ratings as $supName => $scores) {
+                    $sum = (int)($scores['price'] ?? 0) +
+                           (int)($scores['quality'] ?? 0) +
+                           (int)($scores['moq'] ?? 0) +
+                           (int)($scores['lead_time'] ?? 0) +
+                           (int)($scores['communication'] ?? 0) +
+                           (int)($scores['reliability'] ?? 0);
+                    $calculatedRatings[$supName] = [
+                        'scores' => $scores,
+                        'overall_score' => round(($sum / 30) * 100, 2)
+                    ];
+                }
+                $currentPayload['cal_supplier_ratings'] = $calculatedRatings;
+            } elseif ($step === 12) {
+                $qty = (int)($currentPayload['mfg_quantity'] ?? 0);
+                $unitCost = (float)($currentPayload['mfg_unit_cost'] ?? 0);
+                $currentPayload['cal_total_production_cost'] = round($qty * $unitCost, 2);
+            }
         }
 
         // Save progress payload
@@ -340,6 +578,12 @@ class ServicesController extends Controller
 
                 if ($step < 5) {
                     $progress->current_step = $nextStep;
+                } else {
+                    $progress->status = 'completed';
+                }
+            } elseif ($service_key === 'product-hunting') {
+                if ($step < 13) {
+                    $progress->current_step = $step + 1;
                 } else {
                     $progress->status = 'completed';
                 }
