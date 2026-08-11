@@ -8,10 +8,10 @@
 
     @if(empty($meta))
         <!-- Upload Form -->
-        <form action="{{ route('services.upload_document', 'business-setup') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('services.upload_document', $serviceKey ?? 'business-setup') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="field_name" value="{{ $field }}">
-            <input type="hidden" name="step" value="4">
+            <input type="hidden" name="step" value="{{ $step ?? 4 }}">
             
             <div class="drag-drop-area" onclick="document.getElementById('file-upload-{{ $field }}').click()">
                 <svg class="drag-drop-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,7 +49,7 @@
                 </span>
             </div>
             <div class="file-actions">
-                <form action="{{ route('services.remove_document', 'business-setup') }}" method="POST">
+                <form action="{{ route('services.remove_document', $serviceKey ?? 'business-setup') }}" method="POST">
                     @csrf
                     <input type="hidden" name="field_name" value="{{ $field }}">
                     <button type="submit" class="btn btn-secondary" style="height: 28px; padding: 0 var(--spacing-2); font-size: 10px; color: var(--color-danger); border-color: rgba(239,68,68,0.2);">

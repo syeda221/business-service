@@ -21,6 +21,7 @@ class ServiceProgress extends Model
     protected $fillable = [
         'user_id',
         'service_key',
+        'company_id',
         'status',
         'current_step',
         'payload',

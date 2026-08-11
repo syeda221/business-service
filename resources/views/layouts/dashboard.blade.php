@@ -133,6 +133,64 @@
                 <div class="user-role" style="background-color: var(--color-primary-light); color: var(--color-primary); padding: 4px 10px; border-radius: var(--radius-sm); font-weight: var(--fw-semibold); font-size: var(--fs-xs);">
                     Production Environment
                 </div>
+                
+                <!-- Company Selector Dropdown -->
+                <div class="company-selector" style="position: relative; display: inline-block; margin-left: 10px;">
+                    <button class="btn" id="company-dropdown-btn" style="display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); font-weight: var(--fw-semibold); height: 28px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background-color: #ffffff; color: var(--color-text-primary); cursor: pointer; transition: all var(--transition-fast);">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 14px; height: 14px; color: var(--color-primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v3m0 0h4.5" />
+                        </svg>
+                        <span>{{ $activeCompany->name ?? 'Select Company' }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 10px; height: 10px; opacity: 0.5;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <!-- Dropdown List -->
+                    <div id="company-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 220px; background-color: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1000; padding: 6px;">
+                        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); padding: 6px 12px; font-weight: var(--fw-bold);">Select Business</div>
+                        <div class="company-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;">
+                            @foreach($companies as $company)
+                                <form action="{{ route('companies.switch') }}" method="POST" style="margin: 0;">
+                                    @csrf
+                                    <input type="hidden" name="company_id" value="{{ $company->id }}">
+                                    <button type="submit" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: var(--fs-xs); font-weight: var(--fw-medium); border: none; border-radius: var(--radius-sm); background: none; text-align: left; color: {{ $activeCompany->id == $company->id ? 'var(--color-primary)' : 'var(--color-text-primary)' }}; cursor: pointer; transition: all var(--transition-fast);">
+                                        <span>{{ $company->name }}</span>
+                                        @if($activeCompany->id == $company->id)
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                            </svg>
+                                        @endif
+                                    </button>
+                                </form>
+                            @endforeach
+                        </div>
+                        <div style="height: 1px; background-color: var(--color-border); margin: 6px 0;"></div>
+                        <a href="javascript:void(0)" id="add-company-btn" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--color-primary); text-decoration: none; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition-fast);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            <span>Create New Business</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Create Company Modal -->
+                <div id="create-company-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+                    <div style="background-color: #ffffff; padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; position: relative;">
+                        <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--spacing-4);">Create New Business Profile</h3>
+                        <form action="{{ route('companies.store') }}" method="POST">
+                            @csrf
+                            <div style="margin-bottom: var(--spacing-4);">
+                                <label style="display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Business Name</label>
+                                <input type="text" name="name" required placeholder="e.g. Acme Corporation" style="width: 100%; height: 36px; padding: 0 var(--spacing-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--fs-sm); outline: none;" />
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3);">
+                                <button type="button" id="close-modal-btn" style="height: 36px; padding: 0 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: var(--fw-semibold); background-color: #ffffff; cursor: pointer;">Cancel</button>
+                                <button type="submit" style="height: 36px; padding: 0 16px; background-color: var(--color-primary); color: #ffffff; border: none; border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: var(--fw-semibold); cursor: pointer;">Create Business</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
             
             <div class="navbar-right">
@@ -181,6 +239,46 @@
             servicesHeader.addEventListener('click', function(e) {
                 e.preventDefault();
                 servicesDropdown.classList.toggle('open');
+            });
+        }
+
+        // Company Selector Dropdown Toggle
+        const companyDropdownBtn = document.getElementById('company-dropdown-btn');
+        const companyDropdownMenu = document.getElementById('company-dropdown-menu');
+        
+        if (companyDropdownBtn && companyDropdownMenu) {
+            companyDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                companyDropdownMenu.style.display = companyDropdownMenu.style.display === 'none' ? 'block' : 'none';
+            });
+            
+            document.addEventListener('click', function(event) {
+                if (!companyDropdownBtn.contains(event.target) && !companyDropdownMenu.contains(event.target)) {
+                    companyDropdownMenu.style.display = 'none';
+                }
+            });
+        }
+
+        // Create Company Modal Toggle
+        const addCompanyBtn = document.getElementById('add-company-btn');
+        const createCompanyModal = document.getElementById('create-company-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        
+        if (addCompanyBtn && createCompanyModal && closeModalBtn) {
+            addCompanyBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                companyDropdownMenu.style.display = 'none';
+                createCompanyModal.style.display = 'flex';
+            });
+            
+            closeModalBtn.addEventListener('click', function() {
+                createCompanyModal.style.display = 'none';
+            });
+            
+            createCompanyModal.addEventListener('click', function(event) {
+                if (event.target === createCompanyModal) {
+                    createCompanyModal.style.display = 'none';
+                }
             });
         }
     });

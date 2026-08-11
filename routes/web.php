@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\CompanyController;
 
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
@@ -22,6 +23,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
+
+    // Company routes
+    Route::post('/companies/switch', [CompanyController::class, 'switch'])->name('companies.switch');
+    Route::post('/companies/create', [CompanyController::class, 'store'])->name('companies.store');
 
     // Services Modules routes
     Route::get('/services', [ServicesController::class, 'index'])->name('services.index');

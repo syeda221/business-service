@@ -33,9 +33,9 @@ class ServicesController extends Controller
         ],
         'marketplace-retail' => [
             'title' => 'Marketplace & Retail Services',
-            'desc' => 'Marketplace setup, listings and retail support.',
-            'steps_count' => 0,
-            'view' => 'admin.services.placeholder'
+            'desc' => 'Manage marketplace setup, product listings, optimization, inventory, orders and physical retail preparation.',
+            'steps_count' => 14,
+            'view' => 'admin.services.marketplace_retail'
         ],
         'fulfillment-logistics' => [
             'title' => 'Fulfillment & Logistics',
@@ -46,6 +46,26 @@ class ServicesController extends Controller
     ];
 
     /**
+     * Helper to get active company id if the service is company-wise.
+     */
+    private function getCompanyIdForService($service_key)
+    {
+        if ($service_key === 'marketplace-retail') {
+            $companyId = session('active_company_id');
+            if (!$companyId && Auth::check()) {
+                $company = \App\Models\Company::firstOrCreate([
+                    'user_id' => Auth::id(),
+                    'name' => 'Default Company'
+                ]);
+                $companyId = $company->id;
+                session(['active_company_id' => $companyId]);
+            }
+            return $companyId;
+        }
+        return null;
+    }
+
+    /**
      * Display the services list overview.
      */
     public function index()
@@ -54,8 +74,10 @@ class ServicesController extends Controller
         $services = [];
 
         foreach ($this->servicesMeta as $key => $meta) {
+            $companyId = $this->getCompanyIdForService($key);
+
             $progress = ServiceProgress::firstOrCreate(
-                ['user_id' => $userId, 'service_key' => $key],
+                ['user_id' => $userId, 'service_key' => $key, 'company_id' => $companyId],
                 [
                     'status' => 'not_started',
                     'current_step' => 1,
@@ -63,7 +85,7 @@ class ServicesController extends Controller
                 ]
             );
 
-            // Compute custom metrics for the business-setup overview
+            // Compute custom metrics for the overview
             $statsInfo = [];
             if ($key === 'business-setup') {
                 $payload = $progress->payload ?? [];
@@ -110,6 +132,31 @@ class ServicesController extends Controller
                     'completed' => $completedSteps,
                     'remaining' => $totalSteps - $completedSteps,
                 ];
+            } elseif ($key === 'marketplace-retail') {
+                $payload = $progress->payload ?? [];
+                $completedSteps = 0;
+                $totalSteps = 14;
+                if (!empty($payload['selected_marketplaces'])) $completedSteps++;
+                if (!empty($payload['accounts'])) $completedSteps++;
+                if (!empty($payload['store_name'])) $completedSteps++;
+                if (!empty($payload['verification_status'])) $completedSteps++;
+                if (!empty($payload['products'])) $completedSteps++;
+                if (!empty($payload['listings'])) $completedSteps++;
+                if (!empty($payload['optimizations'])) $completedSteps++;
+                if (!empty($payload['pricings'])) $completedSteps++;
+                if (!empty($payload['inventories'])) $completedSteps++;
+                if (!empty($payload['launch_status'])) $completedSteps++;
+                if (!empty($payload['orders'])) $completedSteps++;
+                if (!empty($payload['campaigns'])) $completedSteps++;
+                if (isset($payload['physical_retail_required'])) $completedSteps++;
+                if (!empty($payload['retailers']) || $progress->status === 'completed') $completedSteps = $totalSteps;
+                
+                $percentage = round(($completedSteps / $totalSteps) * 100);
+                $statsInfo = [
+                    'percentage' => $percentage,
+                    'completed' => $completedSteps,
+                    'remaining' => $totalSteps - $completedSteps,
+                ];
             }
 
             $services[] = [
@@ -137,9 +184,10 @@ class ServicesController extends Controller
 
         $meta = $this->servicesMeta[$service_key];
         $userId = Auth::id();
+        $companyId = $this->getCompanyIdForService($service_key);
 
         $progress = ServiceProgress::firstOrCreate(
-            ['user_id' => $userId, 'service_key' => $service_key],
+            ['user_id' => $userId, 'service_key' => $service_key, 'company_id' => $companyId],
             [
                 'status' => 'not_started',
                 'current_step' => 1,
@@ -182,8 +230,10 @@ class ServicesController extends Controller
         }
 
         $userId = Auth::id();
+        $companyId = $this->getCompanyIdForService($service_key);
         $progress = ServiceProgress::where('user_id', $userId)
             ->where('service_key', $service_key)
+            ->where('company_id', $companyId)
             ->firstOrFail();
 
         $currentPayload = $progress->payload ?? [];
@@ -485,6 +535,178 @@ class ServicesController extends Controller
                         ];
                         break;
                 }
+            } elseif ($service_key === 'marketplace-retail') {
+                switch ($step) {
+                    case 1:
+                        $rules = [
+                            'selected_marketplaces' => 'required|array|min:1',
+                            'selling_models' => 'required|array|min:1',
+                            'target_countries' => 'required|array|min:1',
+                            'primary_marketplace' => 'required|string',
+                            'expected_launch_date' => 'required|date',
+                            'goals' => 'required|array|min:1',
+                            'additional_requirements' => 'nullable|string',
+                        ];
+                        break;
+                    case 2:
+                        $rules = [
+                            'accounts' => 'required|array',
+                            'accounts.*.marketplace_name' => 'required|string',
+                            'accounts.*.account_status' => 'required|string',
+                            'accounts.*.seller_name' => 'required|string',
+                            'accounts.*.account_email' => 'required|email',
+                            'accounts.*.account_id' => 'required|string',
+                            'accounts.*.store_url' => 'nullable|url',
+                            'accounts.*.created_date' => 'required|date',
+                            'accounts.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 3:
+                        $rules = [
+                            'store_name' => 'required|string',
+                            'store_url' => 'required|url',
+                            'store_description' => 'required|string',
+                            'store_category' => 'required|string',
+                            'store_contact_email' => 'required|email',
+                            'store_phone' => 'required|string',
+                            'shipping_setup_required' => 'required|in:yes,no',
+                            'return_policy_setup_required' => 'required|in:yes,no',
+                            'store_setup_status' => 'required|string',
+                            'store_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 4:
+                        $rules = [
+                            'verification_marketplace' => 'required|string',
+                            'verification_status' => 'required|string',
+                            'verification_submission_date' => 'required|date',
+                            'verification_notes' => 'nullable|string',
+                            'rejection_reason' => 'nullable|string',
+                        ];
+                        break;
+                    case 5:
+                        $rules = [
+                            'products' => 'required|array',
+                            'products.*.product_name' => 'required|string',
+                            'products.*.sku' => 'required|string',
+                            'products.*.product_category' => 'required|string',
+                            'products.*.brand_name' => 'required|string',
+                            'products.*.product_description' => 'required|string',
+                            'products.*.upc_gtin' => 'required|string',
+                            'products.*.product_weight' => 'required|numeric|min:0',
+                            'products.*.product_cost' => 'required|numeric|min:0',
+                            'products.*.target_selling_price' => 'required|numeric|min:0',
+                            'products.*.inventory_quantity' => 'required|integer|min:0',
+                            'products.*.product_status' => 'required|string',
+                        ];
+                        break;
+                    case 6:
+                        $rules = [
+                            'listings' => 'required|array',
+                            'listings.*.product_sku' => 'required|string',
+                            'listings.*.marketplace' => 'required|string',
+                            'listings.*.listing_title' => 'required|string',
+                            'listings.*.listing_description' => 'required|string',
+                            'listings.*.category' => 'required|string',
+                            'listings.*.sku' => 'required|string',
+                            'listings.*.marketplace_product_id' => 'required|string',
+                            'listings.*.listing_status' => 'required|string',
+                        ];
+                        break;
+                    case 7:
+                        $rules = [
+                            'optimizations' => 'required|array',
+                            'optimizations.*.listing_id' => 'required|string',
+                            'optimizations.*.primary_keyword' => 'required|string',
+                            'optimizations.*.optimized_title' => 'required|string',
+                            'optimizations.*.optimized_description' => 'required|string',
+                            'optimizations.*.image_optimization_status' => 'required|string',
+                            'optimizations.*.keyword_optimization_status' => 'required|string',
+                            'optimizations.*.optimization_score' => 'required|numeric|min:0|max:100',
+                            'optimizations.*.optimization_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 8:
+                        $rules = [
+                            'pricings' => 'required|array',
+                            'pricings.*.product_sku' => 'required|string',
+                            'pricings.*.marketplace' => 'required|string',
+                            'pricings.*.base_price' => 'required|numeric|min:0',
+                            'pricings.*.marketplace_price' => 'required|numeric|min:0',
+                            'pricings.*.minimum_price' => 'required|numeric|min:0',
+                            'pricings.*.maximum_price' => 'required|numeric|min:0',
+                            'pricings.*.pricing_status' => 'required|string',
+                        ];
+                        break;
+                    case 9:
+                        $rules = [
+                            'inventories' => 'required|array',
+                            'inventories.*.product_sku' => 'required|string',
+                            'inventories.*.sku' => 'required|string',
+                            'inventories.*.marketplace' => 'required|string',
+                            'inventories.*.available_quantity' => 'required|integer|min:0',
+                            'inventories.*.reorder_level' => 'required|integer|min:0',
+                            'inventories.*.inventory_status' => 'required|string',
+                            'inventories.*.warehouse_location' => 'required|string',
+                            'inventories.*.auto_inventory_sync' => 'required|in:yes,no',
+                        ];
+                        break;
+                    case 10:
+                        $rules = [
+                            'launch_date' => 'required|date',
+                            'launch_status' => 'required|string',
+                            'launch_notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 11:
+                        $rules = [
+                            'orders' => 'required|array',
+                            'orders.*.marketplace' => 'required|string',
+                            'orders.*.order_id' => 'required|string',
+                            'orders.*.customer_name' => 'required|string',
+                            'orders.*.order_date' => 'required|date',
+                            'orders.*.product_sku' => 'required|string',
+                            'orders.*.quantity' => 'required|integer|min:1',
+                            'orders.*.order_amount' => 'required|numeric|min:0',
+                            'orders.*.order_status' => 'required|string',
+                        ];
+                        break;
+                    case 12:
+                        $rules = [
+                            'campaigns' => 'required|array',
+                            'campaigns.*.advertising_platform' => 'required|string',
+                            'campaigns.*.campaign_name' => 'required|string',
+                            'campaigns.*.marketplace' => 'required|string',
+                            'campaigns.*.campaign_type' => 'required|string',
+                            'campaigns.*.daily_budget' => 'required|numeric|min:0',
+                            'campaigns.*.campaign_goal' => 'required|string',
+                            'campaigns.*.campaign_status' => 'required|string',
+                        ];
+                        break;
+                    case 13:
+                        $rules = [
+                            'physical_retail_required' => 'required|in:yes,no',
+                            'retail_product_category' => 'required_if:physical_retail_required,yes|nullable|string',
+                            'wholesale_price' => 'required_if:physical_retail_required,yes|nullable|numeric|min:0',
+                            'suggested_retail_price' => 'required_if:physical_retail_required,yes|nullable|numeric|min:0',
+                            'min_order_quantity' => 'required_if:physical_retail_required,yes|nullable|integer|min:0',
+                            'retail_packaging_required' => 'required_if:physical_retail_required,yes|nullable|in:yes,no',
+                            'retail_ready_packaging' => 'required_if:physical_retail_required,yes|nullable|in:yes,no',
+                            'retail_requirements' => 'nullable|string',
+                        ];
+                        break;
+                    case 14:
+                        $rules = [
+                            'retailers' => 'nullable|array',
+                            'retailers.*.retailer_name' => 'required|string',
+                            'retailers.*.type' => 'required|string',
+                            'retailers.*.contact_person' => 'required|string',
+                            'retailers.*.email' => 'required|email',
+                            'retailers.*.phone' => 'required|string',
+                            'retailers.*.status' => 'required|string',
+                        ];
+                        break;
+                }
             }
         }
 
@@ -587,6 +809,12 @@ class ServicesController extends Controller
                 } else {
                     $progress->status = 'completed';
                 }
+            } elseif ($service_key === 'marketplace-retail') {
+                if ($step < 14) {
+                    $progress->current_step = $step + 1;
+                } else {
+                    $progress->status = 'completed';
+                }
             }
         } else {
             // Save Draft: keep current step but update status to in_progress
@@ -625,8 +853,10 @@ class ServicesController extends Controller
         ]);
 
         $userId = Auth::id();
+        $companyId = $this->getCompanyIdForService($service_key);
         $progress = ServiceProgress::where('user_id', $userId)
             ->where('service_key', $service_key)
+            ->where('company_id', $companyId)
             ->firstOrFail();
 
         $payload = $progress->payload ?? [];
@@ -683,8 +913,10 @@ class ServicesController extends Controller
         ]);
 
         $userId = Auth::id();
+        $companyId = $this->getCompanyIdForService($service_key);
         $progress = ServiceProgress::where('user_id', $userId)
             ->where('service_key', $service_key)
+            ->where('company_id', $companyId)
             ->firstOrFail();
 
         $payload = $progress->payload ?? [];
