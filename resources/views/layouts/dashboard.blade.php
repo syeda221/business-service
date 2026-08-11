@@ -43,22 +43,19 @@
                 </a>
                 
                 <div class="sidebar-submenu" id="services-submenu">
-                    <a href="{{ url('/services') }}" class="sidebar-submenu-link {{ request()->is('services') ? 'active' : '' }}">
-                        Services Overview
-                    </a>
-                    <a href="{{ url('/services/business-setup') }}" class="sidebar-submenu-link {{ request()->is('services/business-setup*') ? 'active' : '' }}">
+                    <a href="{{ url('/services/business-setup') }}" class="sidebar-submenu-link {{ request()->is('services/business-setup*') ? 'active' : '' }}" title="Business Setup & Compliance">
                         Business Setup & Compliance
                     </a>
-                    <a href="{{ url('/services/branding-website') }}" class="sidebar-submenu-link {{ request()->is('services/branding-website*') ? 'active' : '' }}">
-                        Branding & Website Dev
+                    <a href="{{ url('/services/branding-website') }}" class="sidebar-submenu-link {{ request()->is('services/branding-website*') ? 'active' : '' }}" title="Branding & Website Development">
+                        Branding & Website Development
                     </a>
-                    <a href="{{ url('/services/product-hunting') }}" class="sidebar-submenu-link {{ request()->is('services/product-hunting*') ? 'active' : '' }}">
+                    <a href="{{ url('/services/product-hunting') }}" class="sidebar-submenu-link {{ request()->is('services/product-hunting*') ? 'active' : '' }}" title="Product Hunting & Sourcing">
                         Product Hunting & Sourcing
                     </a>
-                    <a href="{{ url('/services/marketplace-retail') }}" class="sidebar-submenu-link {{ request()->is('services/marketplace-retail*') ? 'active' : '' }}">
+                    <a href="{{ url('/services/marketplace-retail') }}" class="sidebar-submenu-link {{ request()->is('services/marketplace-retail*') ? 'active' : '' }}" title="Marketplace & Retail Services">
                         Marketplace & Retail Services
                     </a>
-                    <a href="{{ url('/services/fulfillment-logistics') }}" class="sidebar-submenu-link {{ request()->is('services/fulfillment-logistics*') ? 'active' : '' }}">
+                    <a href="{{ url('/services/fulfillment-logistics') }}" class="sidebar-submenu-link {{ request()->is('services/fulfillment-logistics*') ? 'active' : '' }}" title="Fulfillment & Logistics">
                         Fulfillment & Logistics
                     </a>
                 </div>

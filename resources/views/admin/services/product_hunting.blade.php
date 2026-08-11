@@ -99,16 +99,32 @@
 
 <!-- ================== TAB 1: SETUP WIZARD ================== -->
 <div id="tab-content-wizard" class="tab-content active">
-    <!-- Horizontal Stepper (Scrollable) -->
-    <div class="stepper-container" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <ol class="stepper" style="min-width: 1400px; padding-bottom: var(--spacing-2);">
-            @foreach($stepTitles as $stepNum => $title)
-                <li class="step-item {{ $currentStep == $stepNum ? 'in-progress' : ($currentStep > $stepNum ? 'completed' : 'not-started') }}" onclick="jumpToStep({{ $stepNum }})">
-                    <div class="step-circle">{{ str_pad($stepNum, 2, '0', STR_PAD_LEFT) }}</div>
-                    <span class="step-title" style="white-space: nowrap;">{{ $title }}</span>
-                </li>
-            @endforeach
-        </ol>
+    <!-- Horizontal Stepper (Scrollable Container with Nav Arrows) -->
+    <div style="position: relative; width: 100%;">
+        <!-- Scroll Left Button -->
+        <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-240)" aria-label="Scroll Left">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </button>
+
+        <!-- Scroll Right Button -->
+        <button type="button" class="stepper-scroll-btn scroll-right" onclick="scrollStepper(240)" aria-label="Scroll Right">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+
+        <div class="stepper-container" id="stepper-scroll-container">
+            <ol class="stepper" style="min-width: 1820px; padding-bottom: var(--spacing-2);">
+                @foreach($stepTitles as $stepNum => $title)
+                    <li class="step-item {{ $currentStep == $stepNum ? 'in-progress' : ($currentStep > $stepNum ? 'completed' : 'not-started') }}" onclick="jumpToStep({{ $stepNum }})">
+                        <div class="step-circle">{{ str_pad($stepNum, 2, '0', STR_PAD_LEFT) }}</div>
+                        <span class="step-title">{{ $title }}</span>
+                    </li>
+                @endforeach
+            </ol>
+        </div>
     </div>
 
     <!-- Wizard Form Cards -->
@@ -2013,6 +2029,17 @@
         const unitCost = parseFloat(document.getElementById('mfg_unit_cost').value) || 0;
         const total = qty * unitCost;
         document.getElementById('total-production-cost-display').innerText = '$' + total.toFixed(2);
+    }
+
+    // Scroll Stepper smoothly
+    function scrollStepper(amount) {
+        const container = document.getElementById('stepper-scroll-container');
+        if (container) {
+            container.scrollBy({
+                left: amount,
+                behavior: 'smooth'
+            });
+        }
     }
 </script>
 @endsection

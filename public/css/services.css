@@ -29,27 +29,35 @@
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--spacing-8);
     overflow-x: auto;
+    scrollbar-width: thin; /* Firefox thin scrollbar */
+}
+
+/* Chrome/Safari thin scrollbar */
+.stepper-container::-webkit-scrollbar {
+    height: 5px;
+}
+
+.stepper-container::-webkit-scrollbar-track {
+    background: var(--color-bg-base);
+    border-radius: var(--radius-full);
+}
+
+.stepper-container::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+}
+
+.stepper-container::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
 }
 
 .stepper {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-width: 800px; /* Ensures stepper doesn't squish on smaller viewports */
+    justify-content: flex-start;
+    align-items: flex-start;
     list-style: none;
-    position: relative;
-}
-
-/* Stepper Connector line */
-.stepper::before {
-    content: "";
-    position: absolute;
-    top: 20px;
-    left: 40px;
-    right: 40px;
-    height: 2px;
-    background-color: var(--color-border);
-    z-index: 1;
+    padding: 0;
+    margin: 0;
 }
 
 .step-item {
@@ -59,7 +67,26 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    flex: 1;
+    flex: 0 0 140px; /* Equal fixed width so text never overlaps */
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+/* Individual connecting line segments */
+.step-item::after {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: var(--color-border);
+    z-index: -1;
+    transition: background-color var(--transition-fast);
+}
+
+.step-item:last-child::after {
+    display: none; /* No line after the last step */
 }
 
 .step-circle {
@@ -78,45 +105,94 @@
 }
 
 .step-title {
-    font-size: var(--fs-xs);
+    font-size: 11px;
     font-weight: var(--fw-medium);
     color: var(--color-text-secondary);
-    margin-top: var(--spacing-2);
-    white-space: nowrap;
+    margin-top: var(--spacing-3); /* Controlled vertical spacing */
+    white-space: normal; /* Wrap text naturally */
+    max-width: 120px; /* Restrict width to avoid merging */
+    line-height: 1.3;
 }
 
 .step-status {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: var(--fw-semibold);
     margin-top: 2px;
     display: block;
+    color: var(--color-text-muted);
 }
 
-/* Stepper states */
+/* Stepper States styling */
 .step-item.completed .step-circle {
     background-color: var(--color-success-light);
     border-color: var(--color-success);
     color: var(--color-success-dark);
 }
+
 .step-item.completed .step-title {
-    color: var(--color-text-primary);
+    color: var(--color-success-dark);
 }
-.step-item.completed .step-status {
-    color: var(--color-success);
+
+.step-item.completed::after {
+    background-color: var(--color-success); /* Completed line segment */
 }
 
 .step-item.in-progress .step-circle {
-    background-color: var(--color-primary-light);
+    background-color: var(--color-primary);
     border-color: var(--color-primary);
-    color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); /* VISUALLY PROMINENT GLOW */
 }
+
 .step-item.in-progress .step-title {
-    color: var(--color-text-primary);
+    color: var(--color-primary-dark);
     font-weight: var(--fw-semibold);
 }
-.step-item.in-progress .step-status {
+
+.step-item.action-required .step-circle {
+    background-color: var(--color-danger-light);
+    border-color: var(--color-danger);
+    color: var(--color-danger-dark);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.step-item.action-required .step-title {
+    color: var(--color-danger-dark);
+}
+
+/* Floating Stepper Scroll Buttons */
+.stepper-scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background-color: #ffffff;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    z-index: 15;
+    transition: all var(--transition-fast);
+}
+
+.stepper-scroll-btn:hover {
     color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-lg);
+    background-color: var(--color-bg-base);
+}
+
+.stepper-scroll-btn.scroll-left {
+    left: -16px;
+}
+
+.stepper-scroll-btn.scroll-right {
+    right: -16px;
 }
 
 .step-item.action-required .step-circle {
