@@ -9,37 +9,21 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs">
+<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0;">
     <a href="{{ route('admin.dashboard') }}">Console</a>
     <a href="{{ route('services.index') }}">Services</a>
     <span>Business Setup & Compliance</span>
 </nav>
 
-<!-- Page Header -->
-<div class="service-header">
-    <div class="service-header-left">
-        <h1 class="page-title" style="margin-bottom: var(--spacing-1);">Business Setup & Compliance</h1>
-        <p class="page-subtitle">Manage business setup, LLC, EIN, documents, banking and compliance requirements.</p>
-    </div>
-    <div class="service-actions">
-        <button class="btn btn-secondary">
-            Edit
-        </button>
-        <button class="btn btn-secondary">
-            More Actions
-        </button>
-    </div>
-</div>
-
 <!-- Success / Error Messages -->
 @if(session('success'))
-    <div class="alert alert-success">
+    <div class="alert alert-success" style="margin-top: var(--spacing-3);">
         {{ session('success') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="margin-top: var(--spacing-3);">
         <ul style="padding-left: var(--spacing-4); margin: 0;">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -49,16 +33,16 @@
 @endif
 
 <!-- Tabs Navigation -->
-<div class="tabs-navigation">
+<div class="tabs-navigation" style="margin-bottom: 0;">
     <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
     <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
 </div>
 
-<!-- TAB 1: STEPS WIZARD -->
+<!-- STEPS WIZARD -->
 <div id="tab-content-wizard" class="tab-content active">
 
     <!-- Stepper Navigation -->
-    <div class="stepper-container">
+    <div class="stepper-container" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
         <ol class="stepper">
             <!-- Step 1 -->
             <li class="step-item {{ $currentStep == 1 ? 'in-progress' : ($currentStep > 1 ? 'completed' : 'not-started') }}" id="step-nav-1" onclick="jumpToStep(1)">
@@ -131,7 +115,7 @@
     </div>
 
     <!-- WIZARD STEP FORMS -->
-    <div class="card" style="padding: var(--spacing-8);">
+    <div class="card" style="padding: var(--spacing-5) var(--spacing-6);">
 
         <!-- ================== STEP 1: BUSINESS INFO ================== -->
         <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">

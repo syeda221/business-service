@@ -9,33 +9,21 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs">
+<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0;">
     <a href="{{ route('admin.dashboard') }}">Console</a>
     <a href="{{ route('services.index') }}">Services</a>
     <span>Branding & Website Development</span>
 </nav>
 
-<!-- Page Header -->
-<div class="service-header">
-    <div class="service-header-left">
-        <h1 class="page-title" style="margin-bottom: var(--spacing-1);">Branding & Website Development</h1>
-        <p class="page-subtitle">Manage branding, website development and digital advertising requirements.</p>
-    </div>
-    <div class="service-actions">
-        <button class="btn btn-secondary">Edit</button>
-        <button class="btn btn-secondary">More Actions</button>
-    </div>
-</div>
-
 <!-- Success / Error Messages -->
 @if(session('success'))
-    <div class="alert alert-success">
+    <div class="alert alert-success" style="margin-top: var(--spacing-3);">
         {{ session('success') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="margin-top: var(--spacing-3);">
         <ul style="padding-left: var(--spacing-4); margin: 0;">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -73,8 +61,18 @@
     </div>
 @endif
 
+
+<!-- Tabs Navigation -->
+<div class="tabs-navigation" style="margin-bottom: 0;">
+    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
+    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+</div>
+
+<!-- TAB: STEPS WIZARD -->
+<div id="tab-content-wizard" class="tab-content active">
+
 <!-- Dynamic Stepper -->
-<div class="stepper-container">
+<div class="stepper-container" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
     <ol class="stepper" style="min-width: 600px;">
         <!-- Step 1 -->
         <li class="step-item {{ $currentStep == 1 ? 'in-progress' : ($currentStep > 1 ? 'completed' : 'not-started') }}" id="step-nav-1" onclick="jumpToStep(1)">
@@ -120,7 +118,7 @@
 </div>
 
 <!-- Forms Container -->
-<div class="card" style="padding: var(--spacing-8);">
+<div class="card" style="padding: var(--spacing-5) var(--spacing-6);">
 
     <!-- ================== STEP 1: SERVICE SELECTION ================== -->
     <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">
@@ -704,6 +702,61 @@
     </div>
 
 </div>
+
+</div>{{-- /tab-content-wizard --}}
+
+<!-- TAB: OVERVIEW DASHBOARD -->
+<div id="tab-content-overview" class="tab-content" style="display:none;">
+    <div class="card" style="padding: var(--spacing-6);">
+        <h2 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: var(--spacing-1);">Branding & Website Overview</h2>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-6);">Summary of your branding, website and advertising setup progress.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Current Step</div>
+                <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-primary); margin-top: 4px;">{{ $currentStep }}/5</div>
+            </div>
+            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Status</div>
+                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin-top: 4px; text-transform: capitalize;">{{ str_replace('_', ' ', $status) }}</div>
+            </div>
+            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Branding</div>
+                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasBranding ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasBranding ? 'Selected' : 'Not Selected' }}</div>
+            </div>
+            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Website</div>
+                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasWebsite ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasWebsite ? 'Selected' : 'Not Selected' }}</div>
+            </div>
+            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Advertising</div>
+                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasAdvertising ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasAdvertising ? 'Selected' : 'Not Selected' }}</div>
+            </div>
+        </div>
+
+        @if(!empty($payload['brand_name']))
+        <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Brand Details</div>
+            <div><strong>Brand Name:</strong> {{ $payload['brand_name'] ?? '—' }}</div>
+            @if(!empty($payload['brand_slogan']))<div style="margin-top: 4px;"><strong>Slogan:</strong> {{ $payload['brand_slogan'] }}</div>@endif
+            @if(!empty($payload['preferred_style']))<div style="margin-top: 4px;"><strong>Style:</strong> {{ $payload['preferred_style'] }}</div>@endif
+        </div>
+        @endif
+
+        @if(!empty($payload['website_platform']))
+        <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Website Details</div>
+            <div><strong>Platform:</strong> {{ $payload['website_platform'] ?? '—' }}</div>
+            @if(!empty($payload['domain_name']))<div style="margin-top: 4px;"><strong>Domain:</strong> {{ $payload['domain_name'] }}</div>@endif
+            @if(!empty($payload['number_products']))<div style="margin-top: 4px;"><strong>Products:</strong> {{ $payload['number_products'] }}</div>@endif
+        </div>
+        @endif
+
+        <div style="text-align: center; margin-top: var(--spacing-4);">
+            <button class="btn btn-primary" onclick="switchMainTab('wizard')">Go to Setup Stepper</button>
+        </div>
+    </div>
+</div>{{-- /tab-content-overview --}}
 @endsection
 
 @section('dashboard_scripts')
@@ -777,5 +830,24 @@
         initCustomMultiselect('ad_platforms_container');
         initCustomMultiselect('target_regions_container');
     });
+    // Switch main tabs
+    function switchMainTab(tab) {
+        const wizardContent = document.getElementById('tab-content-wizard');
+        const overviewContent = document.getElementById('tab-content-overview');
+        const wizardBtn = document.getElementById('tab-btn-wizard');
+        const overviewBtn = document.getElementById('tab-btn-overview');
+        if (tab === 'wizard') {
+            wizardContent.style.display = 'block';
+            overviewContent.style.display = 'none';
+            wizardBtn.classList.add('active');
+            overviewBtn.classList.remove('active');
+        } else {
+            wizardContent.style.display = 'none';
+            overviewContent.style.display = 'block';
+            wizardBtn.classList.remove('active');
+            overviewBtn.classList.add('active');
+        }
+    }
+
 </script>
 @endsection

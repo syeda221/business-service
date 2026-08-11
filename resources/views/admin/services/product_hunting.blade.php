@@ -9,36 +9,21 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs">
+<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0;">
     <a href="{{ route('admin.dashboard') }}">Console</a>
     <a href="{{ route('services.index') }}">Services</a>
     <span>Product Hunting & Sourcing</span>
 </nav>
 
-<!-- Page Header -->
-<div class="service-header">
-    <div class="service-header-left">
-        <h1 class="page-title" style="margin-bottom: var(--spacing-1);">Product Sourcing Console</h1>
-        <p class="page-subtitle">Research, validate and source profitable products from reliable manufacturers.</p>
-    </div>
-    <div class="service-actions">
-        <!-- Tab Selectors -->
-        <div class="tab-container" style="margin-bottom: 0;">
-            <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Wizard</button>
-            <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Sourcing Dashboard</button>
-        </div>
-    </div>
-</div>
-
 <!-- Success / Error Messages -->
 @if(session('success'))
-    <div class="alert alert-success">
+    <div class="alert alert-success" style="margin-top: var(--spacing-3);">
         {{ session('success') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="margin-top: var(--spacing-3);">
         <ul style="padding-left: var(--spacing-4); margin: 0;">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -97,10 +82,16 @@
     </div>
 @endif
 
+<!-- Tabs Navigation -->
+<div class="tabs-navigation" style="margin-bottom: 0;">
+    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Wizard</button>
+    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Sourcing Dashboard</button>
+</div>
+
 <!-- ================== TAB 1: SETUP WIZARD ================== -->
 <div id="tab-content-wizard" class="tab-content active">
     <!-- Horizontal Stepper (Scrollable Container with Nav Arrows) -->
-    <div style="position: relative; width: 100%;">
+    <div style="position: relative; width: 100%; margin-top: var(--spacing-2);">
         <!-- Scroll Left Button -->
         <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-240)" aria-label="Scroll Left">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
@@ -128,7 +119,7 @@
     </div>
 
     <!-- Wizard Form Cards -->
-    <div class="card" style="padding: var(--spacing-8); margin-bottom: 80px;">
+    <div class="card" style="padding: var(--spacing-5) var(--spacing-6); margin-bottom: 80px;">
 
         <!-- STEP 1: PRODUCT REQUIREMENTS -->
         <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">

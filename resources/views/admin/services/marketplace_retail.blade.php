@@ -128,32 +128,21 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs">
+<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0;">
     <a href="{{ route('admin.dashboard') }}">Console</a>
     <a href="{{ route('services.index') }}">Services</a>
     <span>Marketplace & Retail Services</span>
 </nav>
 
-<!-- Page Header -->
-<div class="service-header">
-    <div class="service-header-left">
-        <h1 class="page-title" style="margin-bottom: var(--spacing-1);">Marketplace & Retail Services</h1>
-        <p class="page-subtitle">Manage marketplace setup, product listings, optimization, inventory, orders and physical retail preparation.</p>
-    </div>
-    <div class="service-actions">
-        <a href="{{ route('services.index') }}" class="btn btn-secondary">Back to Overview</a>
-    </div>
-</div>
-
 <!-- Success / Error Messages -->
 @if(session('success'))
-    <div class="alert alert-success">
+    <div class="alert alert-success" style="margin-top: var(--spacing-3);">
         {{ session('success') }}
     </div>
 @endif
 
 @if($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="margin-top: var(--spacing-3);">
         <ul style="padding-left: var(--spacing-4); margin: 0;">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -211,8 +200,16 @@
     ];
 @endphp
 
+<!-- Tabs Navigation -->
+<div class="tabs-navigation" style="margin-bottom: 0;">
+    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
+    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+</div>
+
+<!-- TAB: OVERVIEW DASHBOARD -->
+<div id="tab-content-overview" class="tab-content" style="display:none;">
 <!-- SERVICE OVERVIEW PANEL -->
-<div class="stats-panel-row">
+<div class="stats-panel-row" style="margin-top: var(--spacing-3);">
     <div class="stat-card-mini">
         <span class="stat-card-title">Selected Markets</span>
         <span class="stat-card-value">{{ count($selectedMarketplaces) }}</span>
@@ -241,10 +238,14 @@
         <span class="stat-card-title">Retail Prospects</span>
         <span class="stat-card-value">{{ $retailProspectsCount }}</span>
     </div>
-</div>
+</div>{{-- /stats-panel-row --}}
+</div>{{-- /tab-content-overview --}}
+
+<!-- TAB: SETUP WIZARD -->
+<div id="tab-content-wizard" class="tab-content active">
 
 <!-- Dynamic Stepper -->
-<div style="position: relative; width: 100%; margin-bottom: var(--spacing-6);">
+<div style="position: relative; width: 100%; margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
     <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-240)" aria-label="Scroll Left">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -268,7 +269,7 @@
 </div>
 
 <!-- Forms Container -->
-<div class="card" style="padding: var(--spacing-8); margin-bottom: 80px;">
+<div class="card" style="padding: var(--spacing-5) var(--spacing-6); margin-bottom: 80px;">
 
     <!-- ================== STEP 1: MARKETPLACE SELECTION ================== -->
     <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">
@@ -2090,6 +2091,8 @@
     </div>
 
 </div>
+
+</div>{{-- /tab-content-wizard --}}
 @endsection
 
 @section('dashboard_scripts')
@@ -2759,5 +2762,23 @@
         renderTable('campaign');
         renderTable('retailer');
     });
+
+    function switchMainTab(tab) {
+        const wizardContent = document.getElementById('tab-content-wizard');
+        const overviewContent = document.getElementById('tab-content-overview');
+        const wizardBtn = document.getElementById('tab-btn-wizard');
+        const overviewBtn = document.getElementById('tab-btn-overview');
+        if (tab === 'wizard') {
+            wizardContent.style.display = 'block';
+            overviewContent.style.display = 'none';
+            wizardBtn.classList.add('active');
+            overviewBtn.classList.remove('active');
+        } else {
+            wizardContent.style.display = 'none';
+            overviewContent.style.display = 'block';
+            wizardBtn.classList.remove('active');
+            overviewBtn.classList.add('active');
+        }
+    }
 </script>
 @endsection
