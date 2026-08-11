@@ -108,7 +108,7 @@
                     <div class="avatar" style="border: none; background-color: var(--color-primary); color: #ffffff;">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                     </div>
-                    <div style="display: flex; flex-direction: column;">
+                    <div class="sidebar-user-details" style="display: flex; flex-direction: column;">
                         <span style="font-weight: var(--fw-semibold); color: #ffffff; white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-xs);">
                             {{ Auth::user()->name }}
                         </span>

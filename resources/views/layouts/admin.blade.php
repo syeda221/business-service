@@ -23,14 +23,22 @@
     <!-- Global JS Actions -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Mobile Sidebar Toggle
+            // Sidebar Toggle
             const toggleBtn = document.getElementById('sidebar-toggle-btn');
             const sidebar = document.getElementById('sidebar-menu');
+            const mainContent = document.getElementById('main-content-layout');
             
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    sidebar.classList.toggle('open');
+                    if (window.innerWidth > 1024) {
+                        sidebar.classList.toggle('collapsed');
+                        if (mainContent) {
+                            mainContent.classList.toggle('collapsed');
+                        }
+                    } else {
+                        sidebar.classList.toggle('open');
+                    }
                 });
                 
                 // Close sidebar if user clicks outside of it on mobile

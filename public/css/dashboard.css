@@ -496,7 +496,7 @@
 /* Submenu layout with vertical line */
 .sidebar-submenu {
     display: none;
-    padding-left: 36px;
+    padding-left: 24px;
     margin-top: var(--spacing-1);
     margin-bottom: var(--spacing-2);
     position: relative;
@@ -510,7 +510,7 @@
     position: absolute;
     top: -4px;
     bottom: 15px; /* Stop right at the last link item's branch */
-    left: 26px; /* Align branches center-left */
+    left: 17px; /* Align branches center-left */
     width: 1px;
     background-color: rgba(255, 255, 255, 0.12); /* Subtle white line for dark sidebar */
 }
@@ -523,7 +523,7 @@
 /* Submenu Child Link */
 .sidebar-submenu-link {
     display: block;
-    padding: 6px 12px 6px 16px;
+    padding: 6px 10px 6px 12px;
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     color: var(--color-text-on-sidebar);
@@ -531,18 +531,18 @@
     text-decoration: none;
     transition: all var(--transition-fast);
     position: relative;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
 /* Horizontal branch (L-shape connector) for children */
 .sidebar-submenu-link::before {
     content: "";
     position: absolute;
-    top: 50%;
-    left: -10px;
-    width: 10px;
+    top: 14px;
+    left: -7px;
+    width: 7px;
     height: 1px;
     background-color: rgba(255, 255, 255, 0.12);
 }
@@ -560,5 +560,61 @@
 
 .sidebar-submenu-link.active::before {
     background-color: var(--color-primary); /* Brighter Indigo connector line for active item */
+}
+
+/* Collapsed state styling on desktop (screen width > 1024px) */
+@media (min-width: 1025px) {
+    /* Collapse sidebar */
+    .sidebar.collapsed {
+        width: var(--sidebar-collapsed-width, 72px);
+    }
+    
+    /* Collapse main content margin */
+    .main-wrapper.collapsed {
+        margin-left: var(--sidebar-collapsed-width, 72px);
+    }
+    
+    /* Center logo and hide text */
+    .sidebar.collapsed .sidebar-brand {
+        padding: 0;
+        justify-content: center;
+    }
+    .sidebar.collapsed .sidebar-logo-text {
+        display: none;
+    }
+    
+    /* Center links and hide labels/text */
+    .sidebar.collapsed .sidebar-navigation {
+        padding: var(--spacing-6) var(--spacing-2);
+    }
+    .sidebar.collapsed .sidebar-navigation-label {
+        display: none;
+    }
+    .sidebar.collapsed .sidebar-link {
+        justify-content: center;
+        padding: var(--spacing-3) 0;
+        gap: 0;
+    }
+    .sidebar.collapsed .sidebar-link span {
+        display: none;
+    }
+    
+    /* Hide submenu indicators and the submenu itself */
+    .sidebar.collapsed .sidebar-dropdown-chevron-btn {
+        display: none;
+    }
+    .sidebar.collapsed .sidebar-submenu {
+        display: none !important;
+    }
+    
+    /* Center avatar in footer and hide user details */
+    .sidebar.collapsed .sidebar-footer {
+        padding: var(--spacing-3) 0;
+        display: flex;
+        justify-content: center;
+    }
+    .sidebar.collapsed .sidebar-footer .sidebar-user-details {
+        display: none !important;
+    }
 }
 
