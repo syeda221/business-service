@@ -39,9 +39,9 @@ class ServicesController extends Controller
         ],
         'fulfillment-logistics' => [
             'title' => 'Fulfillment & Logistics',
-            'desc' => 'Warehousing, fulfillment and shipping operations.',
-            'steps_count' => 0,
-            'view' => 'admin.services.placeholder'
+            'desc' => 'Manage warehouse receiving, inventory storage, order fulfillment, shipping, tracking and returns.',
+            'steps_count' => 16,
+            'view' => 'admin.services.fulfillment_logistics'
         ]
     ];
 
@@ -50,7 +50,7 @@ class ServicesController extends Controller
      */
     private function getCompanyIdForService($service_key)
     {
-        if ($service_key === 'marketplace-retail') {
+        if ($service_key === 'marketplace-retail' || $service_key === 'fulfillment-logistics') {
             $companyId = session('active_company_id');
             if (!$companyId && Auth::check()) {
                 $company = \App\Models\Company::firstOrCreate([
@@ -150,6 +150,33 @@ class ServicesController extends Controller
                 if (!empty($payload['campaigns'])) $completedSteps++;
                 if (isset($payload['physical_retail_required'])) $completedSteps++;
                 if (!empty($payload['retailers']) || $progress->status === 'completed') $completedSteps = $totalSteps;
+                
+                $percentage = round(($completedSteps / $totalSteps) * 100);
+                $statsInfo = [
+                    'percentage' => $percentage,
+                    'completed' => $completedSteps,
+                    'remaining' => $totalSteps - $completedSteps,
+                ];
+            } elseif ($key === 'fulfillment-logistics') {
+                $payload = $progress->payload ?? [];
+                $completedSteps = 0;
+                $totalSteps = 16;
+                if (!empty($payload['service_types'])) $completedSteps++;
+                if (isset($payload['planning_expected_qty'])) $completedSteps++;
+                if (!empty($payload['shipments'])) $completedSteps++;
+                if (!empty($payload['receivings'])) $completedSteps++;
+                if (!empty($payload['verifications'])) $completedSteps++;
+                if (!empty($payload['inspections'])) $completedSteps++;
+                if (!empty($payload['storage_records'])) $completedSteps++;
+                if (!empty($payload['inventories'])) $completedSteps++;
+                if (!empty($payload['orders'])) $completedSteps++;
+                if (!empty($payload['picks'])) $completedSteps++;
+                if (!empty($payload['labels'])) $completedSteps++;
+                if (!empty($payload['carriers'])) $completedSteps++;
+                if (!empty($payload['trackings'])) $completedSteps++;
+                if (!empty($payload['deliveries'])) $completedSteps++;
+                if (!empty($payload['returns'])) $completedSteps++;
+                if (!empty($payload['inventory_updates']) || $progress->status === 'completed') $completedSteps = $totalSteps;
                 
                 $percentage = round(($completedSteps / $totalSteps) * 100);
                 $statsInfo = [
@@ -559,6 +586,7 @@ class ServicesController extends Controller
                             'accounts.*.store_url' => 'nullable|url',
                             'accounts.*.created_date' => 'required|date',
                             'accounts.*.notes' => 'nullable|string',
+                            'accounts.*.documents' => 'nullable|array',
                         ];
                         break;
                     case 3:
@@ -573,6 +601,9 @@ class ServicesController extends Controller
                             'return_policy_setup_required' => 'required|in:yes,no',
                             'store_setup_status' => 'required|string',
                             'store_notes' => 'nullable|string',
+                            'store_logo' => 'nullable|array',
+                            'store_banner' => 'nullable|array',
+                            'brand_assets' => 'nullable|array',
                         ];
                         break;
                     case 4:
@@ -582,6 +613,7 @@ class ServicesController extends Controller
                             'verification_submission_date' => 'required|date',
                             'verification_notes' => 'nullable|string',
                             'rejection_reason' => 'nullable|string',
+                            'verification_documents' => 'nullable|array',
                         ];
                         break;
                     case 5:
@@ -598,6 +630,12 @@ class ServicesController extends Controller
                             'products.*.target_selling_price' => 'required|numeric|min:0',
                             'products.*.inventory_quantity' => 'required|integer|min:0',
                             'products.*.product_status' => 'required|string',
+                            'products.*.variants' => 'nullable|string',
+                            'products.*.dimensions_length' => 'nullable|numeric|min:0',
+                            'products.*.dimensions_width' => 'nullable|numeric|min:0',
+                            'products.*.dimensions_height' => 'nullable|numeric|min:0',
+                            'products.*.images' => 'nullable|array',
+                            'products.*.video' => 'nullable|array',
                         ];
                         break;
                     case 6:
@@ -611,6 +649,8 @@ class ServicesController extends Controller
                             'listings.*.sku' => 'required|string',
                             'listings.*.marketplace_product_id' => 'required|string',
                             'listings.*.listing_status' => 'required|string',
+                            'listings.*.bullet_points' => 'nullable|array',
+                            'listings.*.images' => 'nullable|array',
                         ];
                         break;
                     case 7:
@@ -624,6 +664,9 @@ class ServicesController extends Controller
                             'optimizations.*.keyword_optimization_status' => 'required|string',
                             'optimizations.*.optimization_score' => 'required|numeric|min:0|max:100',
                             'optimizations.*.optimization_notes' => 'nullable|string',
+                            'optimizations.*.seo_keywords' => 'nullable|string',
+                            'optimizations.*.secondary_keywords' => 'nullable|string',
+                            'optimizations.*.optimized_bullet_points' => 'nullable|array',
                         ];
                         break;
                     case 8:
@@ -633,8 +676,13 @@ class ServicesController extends Controller
                             'pricings.*.marketplace' => 'required|string',
                             'pricings.*.base_price' => 'required|numeric|min:0',
                             'pricings.*.marketplace_price' => 'required|numeric|min:0',
+                            'pricings.*.sale_price' => 'required|numeric|min:0',
                             'pricings.*.minimum_price' => 'required|numeric|min:0',
                             'pricings.*.maximum_price' => 'required|numeric|min:0',
+                            'pricings.*.discount_type' => 'required|string',
+                            'pricings.*.discount_value' => 'required|numeric|min:0',
+                            'pricings.*.start_date' => 'required|date',
+                            'pricings.*.end_date' => 'required|date',
                             'pricings.*.pricing_status' => 'required|string',
                         ];
                         break;
@@ -645,10 +693,12 @@ class ServicesController extends Controller
                             'inventories.*.sku' => 'required|string',
                             'inventories.*.marketplace' => 'required|string',
                             'inventories.*.available_quantity' => 'required|integer|min:0',
+                            'inventories.*.reserved_quantity' => 'required|integer|min:0',
                             'inventories.*.reorder_level' => 'required|integer|min:0',
                             'inventories.*.inventory_status' => 'required|string',
                             'inventories.*.warehouse_location' => 'required|string',
                             'inventories.*.auto_inventory_sync' => 'required|in:yes,no',
+                            'inventories.*.notes' => 'nullable|string',
                         ];
                         break;
                     case 10:
@@ -669,6 +719,10 @@ class ServicesController extends Controller
                             'orders.*.quantity' => 'required|integer|min:1',
                             'orders.*.order_amount' => 'required|numeric|min:0',
                             'orders.*.order_status' => 'required|string',
+                            'orders.*.tracking_number' => 'nullable|string',
+                            'orders.*.carrier' => 'nullable|string',
+                            'orders.*.tracking_url' => 'nullable|url',
+                            'orders.*.notes' => 'nullable|string',
                         ];
                         break;
                     case 12:
@@ -679,8 +733,13 @@ class ServicesController extends Controller
                             'campaigns.*.marketplace' => 'required|string',
                             'campaigns.*.campaign_type' => 'required|string',
                             'campaigns.*.daily_budget' => 'required|numeric|min:0',
+                            'campaigns.*.monthly_budget' => 'required|numeric|min:0',
+                            'campaigns.*.start_date' => 'required|date',
+                            'campaigns.*.end_date' => 'required|date',
                             'campaigns.*.campaign_goal' => 'required|string',
                             'campaigns.*.campaign_status' => 'required|string',
+                            'campaigns.*.target_products' => 'nullable|array',
+                            'campaigns.*.notes' => 'nullable|string',
                         ];
                         break;
                     case 13:
@@ -693,6 +752,10 @@ class ServicesController extends Controller
                             'retail_packaging_required' => 'required_if:physical_retail_required,yes|nullable|in:yes,no',
                             'retail_ready_packaging' => 'required_if:physical_retail_required,yes|nullable|in:yes,no',
                             'retail_requirements' => 'nullable|string',
+                            'retail_catalog' => 'nullable|array',
+                            'retail_price_list' => 'nullable|array',
+                            'target_retailers' => 'nullable|array',
+                            'target_locations' => 'nullable|array',
                         ];
                         break;
                     case 14:
@@ -704,21 +767,349 @@ class ServicesController extends Controller
                             'retailers.*.email' => 'required|email',
                             'retailers.*.phone' => 'required|string',
                             'retailers.*.status' => 'required|string',
+                            'retailers.*.website' => 'nullable|url',
+                            'retailers.*.location' => 'nullable|string',
+                            'retailers.*.products_interested' => 'nullable|array',
+                            'retailers.*.moq' => 'nullable|integer|min:0',
+                            'retailers.*.wholesale_price' => 'nullable|numeric|min:0',
+                            'retailers.*.contact_date' => 'nullable|date',
+                            'retailers.*.notes' => 'nullable|string',
+                            'retailers.*.agreements' => 'nullable|array',
+                        ];
+                        break;
+                }
+            } elseif ($service_key === 'fulfillment-logistics') {
+                switch ($step) {
+                    case 1:
+                        $rules = [
+                            'service_types' => 'required|array|min:1',
+                            'warehouse_required' => 'required|in:yes,no',
+                            'preferred_location' => 'required|string',
+                            'target_country' => 'required|string',
+                            'expected_monthly_orders' => 'required|integer|min:0',
+                            'expected_monthly_units' => 'required|integer|min:0',
+                            'product_categories' => 'required|array|min:1',
+                            'special_handling' => 'required|in:yes,no',
+                            'handling_requirements' => 'required_if:special_handling,yes|nullable|string',
+                            'temp_controlled' => 'required_if:special_handling,yes|nullable|in:yes,no',
+                            'fragile_products' => 'required_if:special_handling,yes|nullable|in:yes,no',
+                            'additional_requirements' => 'nullable|string',
+                        ];
+                        break;
+                    case 2:
+                        $rules = [
+                            'planning_supplier' => 'required|string',
+                            'planning_contact' => 'required|string',
+                            'planning_country' => 'required|string',
+                            'planning_warehouse' => 'required|string',
+                            'planning_skus' => 'required|array|min:1',
+                            'planning_expected_qty' => 'required|integer|min:0',
+                            'planning_cartons' => 'required|integer|min:0',
+                            'planning_ship_date' => 'required|date',
+                            'planning_arrival_date' => 'required|date',
+                            'planning_ship_method' => 'required|string',
+                            'planning_instructions' => 'nullable|string',
+                            'planning_documents' => 'nullable|array',
+                        ];
+                        break;
+                    case 3:
+                        $rules = [
+                            'shipments' => 'required|array',
+                            'shipments.*.reference' => 'required|string',
+                            'shipments.*.supplier' => 'required|string',
+                            'shipments.*.warehouse' => 'required|string',
+                            'shipments.*.products' => 'required|array|min:1',
+                            'shipments.*.quantity' => 'required|integer|min:0',
+                            'shipments.*.cartons' => 'required|integer|min:0',
+                            'shipments.*.method' => 'required|string',
+                            'shipments.*.carrier' => 'required|string',
+                            'shipments.*.tracking_number' => 'required|string',
+                            'shipments.*.tracking_url' => 'nullable|url',
+                            'shipments.*.ship_date' => 'required|date',
+                            'shipments.*.arrival_date' => 'required|date',
+                            'shipments.*.status' => 'required|string',
+                            'shipments.*.documents' => 'nullable|array',
+                            'shipments.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 4:
+                        $rules = [
+                            'receivings' => 'required|array',
+                            'receivings.*.shipment_ref' => 'required|string',
+                            'receivings.*.warehouse' => 'required|string',
+                            'receivings.*.receive_date' => 'required|date',
+                            'receivings.*.received_by' => 'required|string',
+                            'receivings.*.expected_qty' => 'required|integer|min:0',
+                            'receivings.*.received_qty' => 'required|integer|min:0',
+                            'receivings.*.cartons_expected' => 'required|integer|min:0',
+                            'receivings.*.cartons_received' => 'required|integer|min:0',
+                            'receivings.*.status' => 'required|string',
+                            'receivings.*.notes' => 'nullable|string',
+                            'receivings.*.documents' => 'nullable|array',
+                            'receivings.*.photos' => 'nullable|array',
+                            'receivings.*.diff_qty' => 'required|integer',
+                            'receivings.*.diff_type' => 'required|string',
+                        ];
+                        break;
+                    case 5:
+                        $rules = [
+                            'verifications' => 'required|array',
+                            'verifications.*.shipment_ref' => 'required|string',
+                            'verifications.*.sku' => 'required|string',
+                            'verifications.*.expected_qty' => 'required|integer|min:0',
+                            'verifications.*.received_qty' => 'required|integer|min:0',
+                            'verifications.*.verified_qty' => 'required|integer|min:0',
+                            'verifications.*.difference' => 'required|integer',
+                            'verifications.*.status' => 'required|string',
+                            'verifications.*.verified_by' => 'required|string',
+                            'verifications.*.verify_date' => 'required|date',
+                            'verifications.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 6:
+                        $rules = [
+                            'inspections' => 'required|array',
+                            'inspections.*.shipment_ref' => 'required|string',
+                            'inspections.*.sku' => 'required|string',
+                            'inspections.*.inspect_date' => 'required|date',
+                            'inspections.*.inspector' => 'required|string',
+                            'inspections.*.status' => 'required|string',
+                            'inspections.*.decision' => 'required|string',
+                            'inspections.*.score' => 'required|numeric|min:0|max:100',
+                            'inspections.*.defect_qty' => 'required|integer|min:0',
+                            'inspections.*.defects_found' => 'required|in:yes,no',
+                            'inspections.*.defect_details' => 'nullable|string',
+                            'inspections.*.checklist' => 'required|array',
+                            'inspections.*.photos' => 'nullable|array',
+                            'inspections.*.report' => 'nullable|array',
+                        ];
+                        break;
+                    case 7:
+                        $rules = [
+                            'storage_records' => 'required|array',
+                            'storage_records.*.warehouse' => 'required|string',
+                            'storage_records.*.sku' => 'required|string',
+                            'storage_records.*.quantity' => 'required|integer|min:0',
+                            'storage_records.*.location_code' => 'required|string',
+                            'storage_records.*.shelf_bin' => 'required|string',
+                            'storage_records.*.storage_date' => 'required|date',
+                            'storage_records.*.status' => 'required|string',
+                            'storage_records.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 8:
+                        $rules = [
+                            'inventories' => 'required|array',
+                            'inventories.*.sku' => 'required|string',
+                            'inventories.*.product_name' => 'required|string',
+                            'inventories.*.warehouse' => 'required|string',
+                            'inventories.*.location_code' => 'required|string',
+                            'inventories.*.available' => 'required|integer|min:0',
+                            'inventories.*.reserved' => 'required|integer|min:0',
+                            'inventories.*.damaged' => 'required|integer|min:0',
+                            'inventories.*.reorder_level' => 'required|integer|min:0',
+                            'inventories.*.reorder_qty' => 'required|integer|min:0',
+                            'inventories.*.status' => 'required|string',
+                            'inventories.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 9:
+                        $rules = [
+                            'orders' => 'required|array',
+                            'orders.*.order_id' => 'required|string',
+                            'orders.*.source' => 'required|string',
+                            'orders.*.customer_name' => 'required|string',
+                            'orders.*.order_date' => 'required|date',
+                            'orders.*.products' => 'required|array',
+                            'orders.*.warehouse' => 'required|string',
+                            'orders.*.amount' => 'required|numeric|min:0',
+                            'orders.*.status' => 'required|string',
+                            'orders.*.priority' => 'required|string',
+                            'orders.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 10:
+                        $rules = [
+                            'picks' => 'required|array',
+                            'picks.*.order_id' => 'required|string',
+                            'picks.*.warehouse' => 'required|string',
+                            'picks.*.sku' => 'required|string',
+                            'picks.*.required_qty' => 'required|integer|min:1',
+                            'picks.*.picked_qty' => 'required|integer|min:0',
+                            'picks.*.location_code' => 'required|string',
+                            'picks.*.pick_status' => 'required|string',
+                            'picks.*.packed_by' => 'required|string',
+                            'picks.*.pack_date' => 'required|date',
+                            'picks.*.pkg_count' => 'required|integer|min:1',
+                            'picks.*.pkg_weight' => 'required|numeric|min:0',
+                            'picks.*.pkg_dims' => 'required|string',
+                            'picks.*.pkg_type' => 'required|string',
+                            'picks.*.notes' => 'nullable|string',
+                            'picks.*.photos' => 'nullable|array',
+                        ];
+                        break;
+                    case 11:
+                        $rules = [
+                            'labels' => 'required|array',
+                            'labels.*.order_id' => 'required|string',
+                            'labels.*.recipient_name' => 'required|string',
+                            'labels.*.recipient_address' => 'required|string',
+                            'labels.*.city' => 'required|string',
+                            'labels.*.state' => 'required|string',
+                            'labels.*.zip_code' => 'required|string',
+                            'labels.*.country' => 'required|string',
+                            'labels.*.pkg_weight' => 'required|numeric|min:0',
+                            'labels.*.pkg_dims' => 'required|string',
+                            'labels.*.shipping_service' => 'required|string',
+                            'labels.*.label_status' => 'required|string',
+                            'labels.*.tracking_number' => 'required|string',
+                            'labels.*.tracking_url' => 'nullable|url',
+                            'labels.*.label_file' => 'nullable|array',
+                        ];
+                        break;
+                    case 12:
+                        $rules = [
+                            'carriers' => 'required|array',
+                            'carriers.*.order_id' => 'required|string',
+                            'carriers.*.carrier_name' => 'required|string',
+                            'carriers.*.service_type' => 'required|string',
+                            'carriers.*.tracking_number' => 'required|string',
+                            'carriers.*.shipping_cost' => 'required|numeric|min:0',
+                            'carriers.*.pickup_date' => 'required|date',
+                            'carriers.*.est_delivery_date' => 'required|date',
+                            'carriers.*.status' => 'required|string',
+                            'carriers.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 13:
+                        $rules = [
+                            'trackings' => 'required|array',
+                            'trackings.*.order_id' => 'required|string',
+                            'trackings.*.tracking_number' => 'required|string',
+                            'trackings.*.carrier' => 'required|string',
+                            'trackings.*.tracking_url' => 'nullable|url',
+                            'trackings.*.status' => 'required|string',
+                            'trackings.*.last_update' => 'required|date_format:Y-m-d\TH:i',
+                            'trackings.*.est_delivery' => 'required|date',
+                            'trackings.*.notes' => 'nullable|string',
+                        ];
+                        break;
+                    case 14:
+                        $rules = [
+                            'deliveries' => 'required|array',
+                            'deliveries.*.order_id' => 'required|string',
+                            'deliveries.*.customer_name' => 'required|string',
+                            'deliveries.*.delivery_date' => 'required|date',
+                            'deliveries.*.status' => 'required|string',
+                            'deliveries.*.received_by' => 'nullable|string',
+                            'deliveries.*.notes' => 'nullable|string',
+                            'deliveries.*.failure_reason' => 'nullable|string',
+                            'deliveries.*.proof' => 'nullable|array',
+                        ];
+                        break;
+                    case 15:
+                        $rules = [
+                            'returns' => 'required|array',
+                            'returns.*.order_id' => 'required|string',
+                            'returns.*.request_date' => 'required|date',
+                            'returns.*.customer_name' => 'required|string',
+                            'returns.*.sku' => 'required|string',
+                            'returns.*.quantity' => 'required|integer|min:1',
+                            'returns.*.reason' => 'required|string',
+                            'returns.*.status' => 'required|string',
+                            'returns.*.tracking_number' => 'nullable|string',
+                            'returns.*.carrier' => 'nullable|string',
+                            'returns.*.received_date' => 'nullable|date',
+                            'returns.*.inspection_result' => 'nullable|string',
+                            'returns.*.notes' => 'nullable|string',
+                            'returns.*.photos' => 'nullable|array',
+                        ];
+                        break;
+                    case 16:
+                        $rules = [
+                            'inventory_updates' => 'required|array',
+                            'inventory_updates.*.sku' => 'required|string',
+                            'inventory_updates.*.warehouse' => 'required|string',
+                            'inventory_updates.*.transaction_type' => 'required|string',
+                            'inventory_updates.*.quantity' => 'required|integer|min:1',
+                            'inventory_updates.*.ref_type' => 'required|string',
+                            'inventory_updates.*.ref_id' => 'required|string',
+                            'inventory_updates.*.reason' => 'nullable|string',
+                            'inventory_updates.*.updated_by' => 'required|string',
+                            'inventory_updates.*.updated_date' => 'required|date_format:Y-m-d\TH:i',
                         ];
                         break;
                 }
             }
         }
 
+        // Process uploaded files if any
+        $uploadedFiles = $this->processUploadedFiles($request->allFiles(), 'marketplace-retail');
+
         // Validate
         if (!empty($rules)) {
             $validatedData = $request->validate($rules);
-            // Merge validated data into payload
-            $currentPayload = array_merge($currentPayload, $validatedData);
+            
+            // Custom calculations for fulfillment-logistics Step 16 (Inventory Update)
+            if ($service_key === 'fulfillment-logistics' && $step === 16) {
+                // Fetch inventories from Step 8 payload
+                $inventories = $currentPayload['inventories'] ?? [];
+                $updates = $validatedData['inventory_updates'] ?? [];
+                
+                foreach ($updates as &$update) {
+                    $sku = $update['sku'];
+                    $warehouse = $update['warehouse'];
+                    
+                    // Find matching SKU in inventory
+                    $invIndex = collect($inventories)->search(function($item) use ($sku, $warehouse) {
+                        return $item['sku'] === $sku && $item['warehouse'] === $warehouse;
+                    });
+                    
+                    $prevQty = ($invIndex !== false) ? (int)($inventories[$invIndex]['available'] ?? 0) : 0;
+                    $qty = (int)$update['quantity'];
+                    
+                    $type = $update['transaction_type'];
+                    if (in_array($type, ['Received', 'Returned', 'Adjusted'])) {
+                        $newQty = $prevQty + $qty;
+                    } else {
+                        $newQty = max($prevQty - $qty, 0);
+                    }
+                    
+                    $update['prev_quantity'] = $prevQty;
+                    $update['new_quantity'] = $newQty;
+                    
+                    // Also update the active inventories record!
+                    if ($invIndex !== false) {
+                        $inventories[$invIndex]['available'] = $newQty;
+                        // recalculate total = available + reserved + damaged
+                        $avail = (int)$inventories[$invIndex]['available'];
+                        $res = (int)($inventories[$invIndex]['reserved'] ?? 0);
+                        $dmg = (int)($inventories[$invIndex]['damaged'] ?? 0);
+                        $inventories[$invIndex]['total'] = $avail + $res + $dmg;
+                        
+                        // update status
+                        if ($avail <= 0) {
+                            $inventories[$invIndex]['status'] = 'Out of Stock';
+                        } elseif ($avail <= (int)($inventories[$invIndex]['reorder_level'] ?? 10)) {
+                            $inventories[$invIndex]['status'] = 'Low Stock';
+                        } else {
+                            $inventories[$invIndex]['status'] = 'In Stock';
+                        }
+                    }
+                }
+                
+                $validatedData['inventory_updates'] = $updates;
+                $currentPayload['inventories'] = $inventories;
+            }
+            
+            // Merge validated data and files into payload
+            $stepData = array_replace_recursive($validatedData, $uploadedFiles);
+            $currentPayload = array_replace_recursive($currentPayload, $stepData);
         } else {
             // If saving draft or no validation, merge all inputs except csrf, step, action
             $allInputs = $request->except(['_token', 'step', 'action']);
-            $currentPayload = array_merge($currentPayload, $allInputs);
+            $stepData = array_replace_recursive($allInputs, $uploadedFiles);
+            $currentPayload = array_replace_recursive($currentPayload, $stepData);
         }
 
         // Process dynamic calculations for product hunting
@@ -811,6 +1202,12 @@ class ServicesController extends Controller
                 }
             } elseif ($service_key === 'marketplace-retail') {
                 if ($step < 14) {
+                    $progress->current_step = $step + 1;
+                } else {
+                    $progress->status = 'completed';
+                }
+            } elseif ($service_key === 'fulfillment-logistics') {
+                if ($step < 16) {
                     $progress->current_step = $step + 1;
                 } else {
                     $progress->status = 'completed';
@@ -958,5 +1355,31 @@ class ServicesController extends Controller
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Recursively find and process all uploaded files, returning metadata arrays.
+     */
+    private function processUploadedFiles($files, $prefix = 'documents')
+    {
+        $result = [];
+        foreach ($files as $key => $value) {
+            if ($value instanceof \Illuminate\Http\UploadedFile) {
+                $path = $value->store('public/' . $prefix);
+                $result[$key] = [
+                    'name' => $value->getClientOriginalName(),
+                    'path' => $path,
+                    'url' => \Illuminate\Support\Facades\Storage::url($path),
+                    'size' => $this->formatBytes($value->getSize()),
+                    'upload_date' => now()->format('M d, Y h:i A'),
+                    'status' => 'Uploaded'
+                ];
+            } elseif (is_array($value)) {
+                $result[$key] = $this->processUploadedFiles($value, $prefix);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
     }
 }

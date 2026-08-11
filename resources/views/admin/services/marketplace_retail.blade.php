@@ -95,6 +95,34 @@
             padding: var(--spacing-6);
             margin-bottom: var(--spacing-6);
         }
+        .summary-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-2);
+            margin-top: var(--spacing-2);
+        }
+        .badge-market {
+            background-color: var(--color-primary-light);
+            color: var(--color-primary-dark);
+            border: 1px solid rgba(0, 102, 204, 0.15);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+        }
+        .custom-file-upload {
+            border: 1px dashed var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-4);
+            text-align: center;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .custom-file-upload:hover {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary-light);
+        }
     </style>
 @endsection
 
@@ -247,6 +275,18 @@
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Marketplace Selection</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Select the marketplaces you plan to launch on and outline your primary target parameters.</p>
 
+        <!-- Summary Section showing Selected Marketplaces -->
+        @if(!empty($selectedMarketplaces))
+            <div class="card" style="padding: var(--spacing-4); margin-bottom: var(--spacing-6); border-left: 4px solid var(--color-primary); background-color: var(--color-bg-base);">
+                <strong style="font-size: 10px; text-transform: uppercase; color: var(--color-text-secondary); display: block; margin-bottom: var(--spacing-2); letter-spacing: 0.05em;">Selected Marketplaces Summary</strong>
+                <div class="summary-badge-list">
+                    @foreach($selectedMarketplaces as $market)
+                        <span class="badge-market">✓ {{ $market }}</span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST">
             @csrf
             <input type="hidden" name="step" value="1">
@@ -256,8 +296,8 @@
                 <label class="form-label">Marketplace Type (Select multiple) <span style="color: var(--color-danger);">*</span></label>
                 <div class="selection-grid">
                     @foreach(['Amazon', 'Walmart', 'TikTok Shop', 'eBay', 'Shopify', 'Meta Shops', 'Google', 'Other'] as $market)
-                        <div class="selection-card {{ in_array($market, $selectedMarketplaces) ? 'selected' : '' }}" onclick="toggleCheckboxCard(this, 'mk-{{ $market }}')">
-                            <input type="checkbox" name="selected_marketplaces[]" id="mk-{{ $market }}" value="{{ $market }}" class="selection-checkbox" {{ in_array($market, $selectedMarketplaces) ? 'checked' : '' }}>
+                        <div class="selection-card {{ in_array($market, $selectedMarketplaces) ? 'selected' : '' }}" onclick="toggleCheckboxCard(this, 'mk-{{ \Str::slug($market) }}')">
+                            <input type="checkbox" name="selected_marketplaces[]" id="mk-{{ \Str::slug($market) }}" value="{{ $market }}" class="selection-checkbox" {{ in_array($market, $selectedMarketplaces) ? 'checked' : '' }}>
                             <span class="selection-card-title">{{ $market }}</span>
                             <span class="selection-card-desc">Sell products on {{ $market }}.</span>
                         </div>
@@ -269,8 +309,8 @@
                 <label class="form-label">Selling Model (Select multiple) <span style="color: var(--color-danger);">*</span></label>
                 <div class="selection-grid">
                     @foreach(['Retail', 'Wholesale', 'Private Label', 'Dropshipping', 'Direct-to-Consumer', 'Hybrid'] as $model)
-                        <div class="selection-card {{ in_array($model, $sellingModels) ? 'selected' : '' }}" onclick="toggleCheckboxCard(this, 'model-{{ $model }}')">
-                            <input type="checkbox" name="selling_models[]" id="model-{{ $model }}" value="{{ $model }}" class="selection-checkbox" {{ in_array($model, $sellingModels) ? 'checked' : '' }}>
+                        <div class="selection-card {{ in_array($model, $sellingModels) ? 'selected' : '' }}" onclick="toggleCheckboxCard(this, 'model-{{ \Str::slug($model) }}')">
+                            <input type="checkbox" name="selling_models[]" id="model-{{ \Str::slug($model) }}" value="{{ $model }}" class="selection-checkbox" {{ in_array($model, $sellingModels) ? 'checked' : '' }}>
                             <span class="selection-card-title">{{ $model }}</span>
                         </div>
                     @endforeach
@@ -279,7 +319,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Primary Target Countries / Markets <span style="color: var(--color-danger);">*</span></label>
+                    <label class="form-label">Target Countries / Markets <span style="color: var(--color-danger);">*</span></label>
                     <div class="custom-multiselect-container" id="target_countries_container" style="position: relative;">
                         <div class="custom-multiselect-trigger" style="min-height: 38px; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background-color: #ffffff; cursor: pointer; align-items: center;">
                             <span class="multiselect-placeholder" style="color: var(--color-text-muted); font-size: var(--fs-sm);">Select Countries</span>
@@ -345,106 +385,109 @@
     </div>
 
     <!-- ================== STEP 2: ACCOUNT SETUP ================== -->
-    <div id="step-form-container-2" class="step-form-content {{ $currentStep == 2 ? 'active' : '' }}" style="display: {{ $currentStep == 2 ? 'block' : 'none' }};">
+    <div id="step-form-container-2" class="step-form-content {{ $currentStep == 2 ? 'active' : '' }}" style="display: {{ $currentStep == 2 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Account Setup</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Manage account credentials and status updates for your selected marketplaces.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-2-form">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-2-form" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="2">
             <input type="hidden" name="action" id="step-2-action" value="save_continue">
 
             <!-- Hidden Inputs Container for Dynamic Array -->
             <div id="accounts-hidden-inputs-container"></div>
+            <div id="accounts-files-container" style="display: none;"></div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
-                <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Accounts List</h3>
-                <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('account')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Marketplace Account
-                </button>
-            </div>
+            @if(empty($selectedMarketplaces))
+                <div class="alert alert-warning" style="margin-bottom: var(--spacing-6);">
+                    Please select at least one marketplace in Step 1 first.
+                </div>
+            @else
+                @foreach($selectedMarketplaces as $market)
+                    @php $slug = \Str::slug($market); @endphp
+                    <div class="card" style="padding: var(--spacing-6); margin-bottom: var(--spacing-6); border-color: var(--color-border); background-color: #ffffff;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4); border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-2);">
+                            <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-primary);">
+                                {{ $market }} Accounts
+                            </h3>
+                            <button type="button" class="btn btn-primary" style="height: 28px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('account_{{ $slug }}')">
+                                + Add {{ $market }} Account
+                            </button>
+                        </div>
 
-            <!-- Dynamic Form for Adding Account -->
-            <div id="add-account-form" class="inline-form-card" style="display: none;">
-                <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4); color: var(--color-primary);">New Account Details</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Marketplace Name</label>
-                        <select id="acc_marketplace_name" class="form-control" style="height: 36px;">
-                            @foreach($selectedMarketplaces as $m)
-                                <option value="{{ $m }}">{{ $m }}</option>
-                            @endforeach
-                            @if(empty($selectedMarketplaces))
-                                <option value="Amazon">Amazon</option>
-                                <option value="Walmart">Walmart</option>
-                            @endif
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Account Status</label>
-                        <select id="acc_account_status" class="form-control" style="height: 36px;">
-                            @foreach(['Not Started', 'In Progress', 'Submitted', 'Under Review', 'Approved', 'Rejected', 'Active'] as $st)
-                                <option value="{{ $st }}">{{ $st }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Seller / Store Name</label>
-                        <input type="text" id="acc_seller_name" class="form-control" placeholder="e.g. ApexBrands Store" style="height: 36px;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Account Email</label>
-                        <input type="email" id="acc_account_email" class="form-control" placeholder="seller@company.com" style="height: 36px;">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Account ID / Seller ID</label>
-                        <input type="text" id="acc_account_id" class="form-control" placeholder="e.g. A29302193" style="height: 36px;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Store URL</label>
-                        <input type="url" id="acc_store_url" class="form-control" placeholder="https://amazon.com/shops/..." style="height: 36px;">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Account Created Date</label>
-                        <input type="date" id="acc_created_date" class="form-control" style="height: 36px;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Account Notes</label>
-                        <input type="text" id="acc_notes" class="form-control" placeholder="Optional notes..." style="height: 36px;">
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
-                    <button type="button" class="btn btn-secondary" onclick="hideAddForm('account')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('account')">Save Account</button>
-                </div>
-            </div>
+                        <!-- Dynamic Add Account Form for this specific Marketplace -->
+                        <div id="add-account_{{ $slug }}-form" class="inline-form-card" style="display: none;">
+                            <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4); color: var(--color-primary-dark);">New {{ $market }} Account</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Seller / Store Name</label>
+                                    <input type="text" id="acc_seller_name_{{ $slug }}" class="form-control" placeholder="e.g. Apex Store" style="height: 36px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Account Status</label>
+                                    <select id="acc_account_status_{{ $slug }}" class="form-control" style="height: 36px;">
+                                        @foreach(['Not Started', 'In Progress', 'Submitted', 'Under Review', 'Approved', 'Rejected', 'Active'] as $st)
+                                            <option value="{{ $st }}">{{ $st }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Account Email</label>
+                                    <input type="email" id="acc_account_email_{{ $slug }}" class="form-control" placeholder="seller@company.com" style="height: 36px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Account ID / Seller ID</label>
+                                    <input type="text" id="acc_account_id_{{ $slug }}" class="form-control" placeholder="Seller ID" style="height: 36px;">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Store URL</label>
+                                    <input type="url" id="acc_store_url_{{ $slug }}" class="form-control" placeholder="https://..." style="height: 36px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Account Created Date</label>
+                                    <input type="date" id="acc_created_date_{{ $slug }}" class="form-control" style="height: 36px;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Documents (Multiple upload)</label>
+                                <input type="file" id="acc_documents_{{ $slug }}" multiple class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Notes</label>
+                                <textarea id="acc_notes_{{ $slug }}" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
+                                <button type="button" class="btn btn-secondary" onclick="hideAddForm('account_{{ $slug }}')">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="addMarketplaceAccount('{{ $market }}', '{{ $slug }}')">Save Account</button>
+                            </div>
+                        </div>
 
-            <!-- Accounts Table -->
-            <div class="table-responsive" style="margin-bottom: var(--spacing-6);">
-                <table class="table" id="accounts-table">
-                    <thead>
-                        <tr>
-                            <th>Marketplace</th>
-                            <th>Seller Name</th>
-                            <th>Email</th>
-                            <th>Seller ID</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+                        <!-- Accounts list for this marketplace -->
+                        <div class="table-responsive">
+                            <table class="table" id="accounts-{{ $slug }}-table">
+                                <thead>
+                                    <tr>
+                                        <th>Seller Name</th>
+                                        <th>Email</th>
+                                        <th>Account ID</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th>Documents</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated via renderTable -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
 
             <div class="form-navigation">
                 <button type="button" class="btn btn-secondary" onclick="jumpToStep(1)">Back</button>
@@ -457,11 +500,11 @@
     </div>
 
     <!-- ================== STEP 3: STORE SETUP ================== -->
-    <div id="step-form-container-3" class="step-form-content {{ $currentStep == 3 ? 'active' : '' }}" style="display: {{ $currentStep == 3 ? 'block' : 'none' }};">
+    <div id="step-form-container-3" class="step-form-content {{ $currentStep == 3 ? 'active' : '' }}" style="display: {{ $currentStep == 3 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Store Setup</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Enter store profile information, assets, categories, and policies for your principal storefront.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="3">
             <input type="hidden" name="action" id="step-3-action" value="save_continue">
@@ -536,7 +579,46 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <!-- Uploads -->
+            <div class="form-row" style="margin-top: var(--spacing-4);">
+                <div class="form-group">
+                    <label class="form-label">Store Logo</label>
+                    <input type="file" name="store_logo" class="form-control">
+                    @if(!empty($payload['store_logo']['url']))
+                        <div style="margin-top: 6px; font-size: var(--fs-xs);">
+                            Uploaded: <a href="{{ $payload['store_logo']['url'] }}" target="_blank" style="color: var(--color-primary); font-weight: var(--fw-semibold);">{{ $payload['store_logo']['name'] }}</a>
+                        </div>
+                    @endif
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Banner</label>
+                    <input type="file" name="store_banner" class="form-control">
+                    @if(!empty($payload['store_banner']['url']))
+                        <div style="margin-top: 6px; font-size: var(--fs-xs);">
+                            Uploaded: <a href="{{ $payload['store_banner']['url'] }}" target="_blank" style="color: var(--color-primary); font-weight: var(--fw-semibold);">{{ $payload['store_banner']['name'] }}</a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--spacing-4);">
+                <label class="form-label">Brand Assets (Multiple file upload)</label>
+                <input type="file" name="brand_assets[]" multiple class="form-control">
+                @if(!empty($payload['brand_assets']))
+                    <div style="margin-top: 8px;">
+                        <strong style="font-size: var(--fs-xs); color: var(--color-text-secondary);">Uploaded Assets:</strong>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                            @foreach($payload['brand_assets'] as $asset)
+                                <a href="{{ $asset['url'] }}" target="_blank" class="badge-market" style="background-color: var(--color-bg-base); border-color: var(--color-border); color: var(--color-text-primary);">
+                                    📎 {{ $asset['name'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="form-group" style="margin-top: var(--spacing-4);">
                 <label class="form-label">Store Notes</label>
                 <textarea name="store_notes" class="form-control" rows="3">{{ old('store_notes', $payload['store_notes'] ?? '') }}</textarea>
             </div>
@@ -552,14 +634,17 @@
     </div>
 
     <!-- ================== STEP 4: BUSINESS VERIFICATION ================== -->
-    <div id="step-form-container-4" class="step-form-content {{ $currentStep == 4 ? 'active' : '' }}" style="display: {{ $currentStep == 4 ? 'block' : 'none' }};">
+    <div id="step-form-container-4" class="step-form-content {{ $currentStep == 4 ? 'active' : '' }}" style="display: {{ $currentStep == 4 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Business Verification</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Submit and manage registration and verification files required by your marketplaces.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-4-form">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-4-form" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="4">
             <input type="hidden" name="action" id="step-4-action" value="save_continue">
+
+            <div id="verifications-hidden-inputs-container"></div>
+            <div id="verifications-files-container" style="display: none;"></div>
 
             <div class="form-row">
                 <div class="form-group">
@@ -569,9 +654,6 @@
                         @foreach($selectedMarketplaces as $m)
                             <option value="{{ $m }}" {{ old('verification_marketplace', $payload['verification_marketplace'] ?? '') == $m ? 'selected' : '' }}>{{ $m }}</option>
                         @endforeach
-                        @if(empty($selectedMarketplaces))
-                            <option value="Amazon" selected>Amazon</option>
-                        @endif
                     </select>
                 </div>
                 <div class="form-group">
@@ -602,24 +684,68 @@
 
             <div class="section-separator"></div>
 
-            <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4); color: var(--color-text-primary);">Required Documents</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-6);">
-                @include('admin.services.partials.doc_card', [
-                    'title' => 'Business Utility Bill (Verification)',
-                    'field' => 'verification_utility_bill',
-                    'required' => true,
-                    'step' => 4,
-                    'serviceKey' => 'marketplace-retail',
-                    'meta' => $payload['documents']['verification_utility_bill'] ?? null
-                ])
-                @include('admin.services.partials.doc_card', [
-                    'title' => 'National ID / Passport (Verification)',
-                    'field' => 'verification_passport',
-                    'required' => true,
-                    'step' => 4,
-                    'serviceKey' => 'marketplace-retail',
-                    'meta' => $payload['documents']['verification_passport'] ?? null
-                ])
+            <!-- Dynamic Verification Documents List -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+                <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Verification Documents Checklist</h3>
+                <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('verification')">
+                    + Add Document Requirement
+                </button>
+            </div>
+
+            <!-- Add Verification Document Form -->
+            <div id="add-verification-form" class="inline-form-card" style="display: none;">
+                <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4); color: var(--color-primary);">New Document Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Document Name</label>
+                        <input type="text" id="vd_name" class="form-control" placeholder="e.g. Utility Bill" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Document Type</label>
+                        <select id="vd_type" class="form-control" style="height: 36px;">
+                            <option value="Utility Bill">Utility Bill</option>
+                            <option value="Passport / ID">Passport / ID</option>
+                            <option value="Tax Registration Certificate">Tax Registration Certificate</option>
+                            <option value="Certificate of Incorporation">Certificate of Incorporation</option>
+                            <option value="Bank Statement">Bank Statement</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Document File Upload</label>
+                        <input type="file" id="vd_file" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Document Status</label>
+                        <select id="vd_status" class="form-control" style="height: 36px;">
+                            @foreach(['Missing', 'Uploaded', 'Submitted', 'Approved', 'Rejected'] as $ds)
+                                <option value="{{ $ds }}">{{ $ds }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddForm('verification')">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addVerificationDoc()">Save Document</button>
+                </div>
+            </div>
+
+            <!-- Documents Table -->
+            <div class="table-responsive" style="margin-bottom: var(--spacing-6);">
+                <table class="table" id="verifications-table">
+                    <thead>
+                        <tr>
+                            <th>Document Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Uploaded File</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
             <div class="form-navigation">
@@ -633,24 +759,22 @@
     </div>
 
     <!-- ================== STEP 5: PRODUCT CATALOG ================== -->
-    <div id="step-form-container-5" class="step-form-content {{ $currentStep == 5 ? 'active' : '' }}" style="display: {{ $currentStep == 5 ? 'block' : 'none' }};">
+    <div id="step-form-container-5" class="step-form-content {{ $currentStep == 5 ? 'active' : '' }}" style="display: {{ $currentStep == 5 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Product Catalog</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Register and manage products that will be listed on your selected marketplaces.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-5-form">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-5-form" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="5">
             <input type="hidden" name="action" id="step-5-action" value="save_continue">
 
             <div id="products-hidden-inputs-container"></div>
+            <div id="products-files-container" style="display: none;"></div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Products Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('product')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Product
+                    + Add Product
                 </button>
             </div>
 
@@ -690,7 +814,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Variants (Size / Color)</label>
-                        <input type="text" id="prod_variants" class="form-control" placeholder="e.g. L, Red" style="height: 36px;">
+                        <input type="text" id="prod_variants" class="form-control" placeholder="e.g. Large, Red" style="height: 36px;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">UPC / GTIN</label>
@@ -699,36 +823,56 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Product Weight (lbs)</label>
-                        <input type="number" step="0.01" id="prod_product_weight" class="form-control" style="height: 36px;">
+                        <label class="form-label">Dimensions (L x W x H inches)</label>
+                        <div style="display: flex; gap: 4px;">
+                            <input type="number" step="0.1" id="prod_dim_l" class="form-control" placeholder="L" style="height: 36px; text-align: center;">
+                            <input type="number" step="0.1" id="prod_dim_w" class="form-control" placeholder="W" style="height: 36px; text-align: center;">
+                            <input type="number" step="0.1" id="prod_dim_h" class="form-control" placeholder="H" style="height: 36px; text-align: center;">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Product Cost ($)</label>
-                        <input type="number" step="0.01" id="prod_product_cost" class="form-control" style="height: 36px;">
+                        <label class="form-label">Product Weight (lbs)</label>
+                        <input type="number" step="0.01" id="prod_product_weight" class="form-control" style="height: 36px;">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label class="form-label">Product Cost ($)</label>
+                        <input type="number" step="0.01" id="prod_product_cost" class="form-control" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Target Selling Price ($)</label>
                         <input type="number" step="0.01" id="prod_target_selling_price" class="form-control" style="height: 36px;">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Inventory Quantity</label>
                         <input type="number" id="prod_inventory_quantity" class="form-control" style="height: 36px;">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Product Status</label>
+                        <select id="prod_product_status" class="form-control" style="height: 36px;">
+                            <option value="Draft">Draft</option>
+                            <option value="Ready">Ready</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Product Status</label>
-                    <select id="prod_product_status" class="form-control" style="height: 36px;">
-                        <option value="Draft">Draft</option>
-                        <option value="Ready">Ready</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Product Images (Multiple upload)</label>
+                        <input type="file" id="prod_images" multiple class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Product Video (Optional upload)</label>
+                        <input type="file" id="prod_video" class="form-control">
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('product')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('product')">Save Product</button>
+                    <button type="button" class="btn btn-primary" onclick="addProductToCatalog()">Save Product</button>
                 </div>
             </div>
 
@@ -740,9 +884,9 @@
                             <th>Product Name</th>
                             <th>SKU</th>
                             <th>Category</th>
-                            <th>Cost</th>
                             <th>Price</th>
                             <th>Inventory</th>
+                            <th>Files</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -762,24 +906,22 @@
     </div>
 
     <!-- ================== STEP 6: PRODUCT LISTING ================== -->
-    <div id="step-form-container-6" class="step-form-content {{ $currentStep == 6 ? 'active' : '' }}" style="display: {{ $currentStep == 6 ? 'block' : 'none' }};">
+    <div id="step-form-container-6" class="step-form-content {{ $currentStep == 6 ? 'active' : '' }}" style="display: {{ $currentStep == 6 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Product Listing</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Publish product listings tailored to your active marketplaces.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-6-form">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-6-form" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="6">
             <input type="hidden" name="action" id="step-6-action" value="save_continue">
 
             <div id="listings-hidden-inputs-container"></div>
+            <div id="listings-files-container" style="display: none;"></div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Listings Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('listing')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Listing
+                    + Add Listing
                 </button>
             </div>
 
@@ -793,9 +935,6 @@
                             @foreach($products as $p)
                                 <option value="{{ $p['sku'] }}">{{ $p['product_name'] }} ({{ $p['sku'] }})</option>
                             @endforeach
-                            @if(empty($products))
-                                <option value="">No products found</option>
-                            @endif
                         </select>
                     </div>
                     <div class="form-group">
@@ -804,9 +943,6 @@
                             @foreach($selectedMarketplaces as $m)
                                 <option value="{{ $m }}">{{ $m }}</option>
                             @endforeach
-                            @if(empty($selectedMarketplaces))
-                                <option value="Amazon">Amazon</option>
-                            @endif
                         </select>
                     </div>
                 </div>
@@ -821,7 +957,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Listing Description</label>
+                    <label class="form-label">Listing Description (Rich specifications)</label>
                     <textarea id="list_listing_description" class="form-control" rows="2"></textarea>
                 </div>
                 <div class="form-row">
@@ -832,6 +968,16 @@
                     <div class="form-group">
                         <label class="form-label">Marketplace Product ID (e.g. ASIN)</label>
                         <input type="text" id="list_marketplace_product_id" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Listing Images (Multiple upload)</label>
+                        <input type="file" id="list_images" multiple class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bullet Points (Separate with commas)</label>
+                        <input type="text" id="list_bullet_points" class="form-control" placeholder="Point 1, Point 2, Point 3" style="height: 36px;">
                     </div>
                 </div>
                 <div class="form-group">
@@ -847,7 +993,7 @@
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('listing')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('listing')">Save Listing</button>
+                    <button type="button" class="btn btn-primary" onclick="addListingRecord()">Save Listing</button>
                 </div>
             </div>
 
@@ -861,6 +1007,7 @@
                             <th>Title</th>
                             <th>Store SKU</th>
                             <th>Product ID</th>
+                            <th>Files</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -880,7 +1027,7 @@
     </div>
 
     <!-- ================== STEP 7: LISTING OPTIMIZATION ================== -->
-    <div id="step-form-container-7" class="step-form-content {{ $currentStep == 7 ? 'active' : '' }}" style="display: {{ $currentStep == 7 ? 'block' : 'none' }};">
+    <div id="step-form-container-7" class="step-form-content {{ $currentStep == 7 ? 'active' : '' }}" style="display: {{ $currentStep == 7 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Listing Optimization</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Apply SEO keywords, optimized titles, and check score values for catalog listings.</p>
 
@@ -894,10 +1041,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Optimizations Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('optimization')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Optimization
+                    + Add Optimization
                 </button>
             </div>
 
@@ -911,14 +1055,21 @@
                             @foreach($listings as $l)
                                 <option value="{{ $l['sku'] }}">{{ $l['listing_title'] }} ({{ $l['marketplace'] }})</option>
                             @endforeach
-                            @if(empty($listings))
-                                <option value="">No listings found</option>
-                            @endif
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Primary Keyword</label>
                         <input type="text" id="opt_primary_keyword" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">SEO Keywords / Tags (Comma separated)</label>
+                        <input type="text" id="opt_seo_keywords" class="form-control" placeholder="keyword1, keyword2" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Secondary Keywords (Comma separated)</label>
+                        <input type="text" id="opt_secondary_keywords" class="form-control" style="height: 36px;">
                     </div>
                 </div>
                 <div class="form-row">
@@ -959,7 +1110,7 @@
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('optimization')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('optimization')">Save Optimization</button>
+                    <button type="button" class="btn btn-primary" onclick="addOptimizationRecord()">Save Optimization</button>
                 </div>
             </div>
 
@@ -992,9 +1143,20 @@
     </div>
 
     <!-- ================== STEP 8: PRICING SETUP ================== -->
-    <div id="step-form-container-8" class="step-form-content {{ $currentStep == 8 ? 'active' : '' }}" style="display: {{ $currentStep == 8 ? 'block' : 'none' }};">
+    <div id="step-form-container-8" class="step-form-content {{ $currentStep == 8 ? 'active' : '' }}" style="display: {{ $currentStep == 8 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Pricing Setup</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Manage and scheduler pricing strategies, base values, minimums/maximums, and discounts.</p>
+
+        <!-- Dynamic Pricing Summary Card -->
+        <div class="card" style="padding: var(--spacing-4); margin-bottom: var(--spacing-6); background-color: var(--color-bg-base); border: 1px solid var(--color-border); border-left: 4px solid var(--color-primary);">
+            <h3 style="font-size: var(--fs-xs); text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: var(--spacing-2); font-weight: var(--fw-semibold);">Interactive Pricing Calculator</h3>
+            <div class="form-row" style="margin-bottom: 0;">
+                <div style="font-size: var(--fs-xs);">Base Cost: <strong id="calc_base_cost">$0.00</strong></div>
+                <div style="font-size: var(--fs-xs);">Marketplace Price: <strong id="calc_market_price">$0.00</strong></div>
+                <div style="font-size: var(--fs-xs);">Discount: <strong id="calc_discount">$0.00</strong></div>
+                <div style="font-size: var(--fs-xs);">Final Price: <strong id="calc_final_price" style="color: var(--color-primary-dark); font-weight: var(--fw-bold);">$0.00</strong></div>
+            </div>
+        </div>
 
         <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-8-form">
             @csrf
@@ -1006,10 +1168,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Pricings Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('pricing')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Pricing
+                    + Add Pricing
                 </button>
             </div>
 
@@ -1019,9 +1178,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Select Product</label>
-                        <select id="pr_product_sku" class="form-control" style="height: 36px;">
+                        <select id="pr_product_sku" class="form-control" style="height: 36px;" onchange="syncPricingCost(this.value)">
+                            <option value="">Select Product</option>
                             @foreach($products as $p)
-                                <option value="{{ $p['sku'] }}">{{ $p['product_name'] }} ({{ $p['sku'] }})</option>
+                                <option value="{{ $p['sku'] }}" data-cost="{{ $p['product_cost'] }}">{{ $p['product_name'] }} ({{ $p['sku'] }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -1037,34 +1197,63 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Base Cost Price ($)</label>
-                        <input type="number" step="0.01" id="pr_base_price" class="form-control" style="height: 36px;">
+                        <input type="number" step="0.01" id="pr_base_price" class="form-control" style="height: 36px;" oninput="runPricingCalc()">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Marketplace Price ($)</label>
-                        <input type="number" step="0.01" id="pr_marketplace_price" class="form-control" style="height: 36px;">
+                        <input type="number" step="0.01" id="pr_marketplace_price" class="form-control" style="height: 36px;" oninput="runPricingCalc()">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label class="form-label">Discount Type</label>
+                        <select id="pr_discount_type" class="form-control" style="height: 36px;" onchange="runPricingCalc()">
+                            <option value="Percentage">Percentage (%)</option>
+                            <option value="Fixed Amount">Fixed Amount ($)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discount Value</label>
+                        <input type="number" step="0.01" id="pr_discount_value" class="form-control" style="height: 36px;" value="0" oninput="runPricingCalc()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Sale / Final Price ($)</label>
+                        <input type="number" step="0.01" id="pr_sale_price" class="form-control" readonly style="height: 36px; background-color: var(--color-bg-base);">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Minimum Price ($)</label>
                         <input type="number" step="0.01" id="pr_minimum_price" class="form-control" style="height: 36px;">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Maximum Price ($)</label>
                         <input type="number" step="0.01" id="pr_maximum_price" class="form-control" style="height: 36px;">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Pricing Status</label>
+                        <select id="pr_pricing_status" class="form-control" style="height: 36px;">
+                            <option value="Draft">Draft</option>
+                            <option value="Active">Active</option>
+                            <option value="Scheduled">Scheduled</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Pricing Status</label>
-                    <select id="pr_pricing_status" class="form-control" style="height: 36px;">
-                        <option value="Draft">Draft</option>
-                        <option value="Active">Active</option>
-                        <option value="Scheduled">Scheduled</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Discount Start Date</label>
+                        <input type="date" id="pr_start_date" class="form-control" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discount End Date</label>
+                        <input type="date" id="pr_end_date" class="form-control" style="height: 36px;">
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('pricing')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('pricing')">Save Pricing</button>
+                    <button type="button" class="btn btn-primary" onclick="addPricingRecord()">Save Pricing</button>
                 </div>
             </div>
 
@@ -1077,8 +1266,9 @@
                             <th>Marketplace</th>
                             <th>Base Cost</th>
                             <th>Marketplace Price</th>
-                            <th>Min Price</th>
-                            <th>Max Price</th>
+                            <th>Sale Price</th>
+                            <th>Min/Max</th>
+                            <th>Discount</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -1098,7 +1288,7 @@
     </div>
 
     <!-- ================== STEP 9: INVENTORY SETUP ================== -->
-    <div id="step-form-container-9" class="step-form-content {{ $currentStep == 9 ? 'active' : '' }}" style="display: {{ $currentStep == 9 ? 'block' : 'none' }};">
+    <div id="step-form-container-9" class="step-form-content {{ $currentStep == 9 ? 'active' : '' }}" style="display: {{ $currentStep == 9 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Inventory Setup</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Manage warehouse quantities, low-stock reorder thresholds, and active auto-sync parameters.</p>
 
@@ -1112,10 +1302,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Inventories Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('inventory')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Inventory
+                    + Add Inventory
                 </button>
             </div>
 
@@ -1153,9 +1340,15 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label class="form-label">Reserved Quantity</label>
+                        <input type="number" id="inv_reserved_quantity" class="form-control" style="height: 36px;" value="0">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Reorder Level (Threshold)</label>
                         <input type="number" id="inv_reorder_level" class="form-control" style="height: 36px;" value="10">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Warehouse / Location</label>
                         <select id="inv_warehouse_location" class="form-control" style="height: 36px;">
@@ -1163,16 +1356,6 @@
                             <option value="US West (LA)">US West (LA)</option>
                             <option value="Europe (DE)">Europe (DE)</option>
                             <option value="FBA Warehouse">FBA Warehouse</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Inventory Status</label>
-                        <select id="inv_inventory_status" class="form-control" style="height: 36px;">
-                            <option value="In Stock">In Stock</option>
-                            <option value="Low Stock">Low Stock</option>
-                            <option value="Out of Stock">Out of Stock</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1185,9 +1368,23 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Inventory Status</label>
+                        <select id="inv_inventory_status" class="form-control" style="height: 36px;">
+                            <option value="In Stock">In Stock</option>
+                            <option value="Low Stock">Low Stock</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Inventory Notes</label>
+                        <input type="text" id="inv_notes" class="form-control" placeholder="Optional comments..." style="height: 36px;">
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('inventory')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('inventory')">Save Inventory</button>
+                    <button type="button" class="btn btn-primary" onclick="addInventoryRecord()">Save Inventory</button>
                 </div>
             </div>
 
@@ -1200,6 +1397,7 @@
                             <th>Store SKU</th>
                             <th>Marketplace</th>
                             <th>Available Qty</th>
+                            <th>Reserved Qty</th>
                             <th>Reorder Threshold</th>
                             <th>Warehouse</th>
                             <th>Auto Sync</th>
@@ -1222,7 +1420,7 @@
     </div>
 
     <!-- ================== STEP 10: MARKETPLACE LAUNCH ================== -->
-    <div id="step-form-container-10" class="step-form-content {{ $currentStep == 10 ? 'active' : '' }}" style="display: {{ $currentStep == 10 ? 'block' : 'none' }};">
+    <div id="step-form-container-10" class="step-form-content {{ $currentStep == 10 ? 'active' : '' }}" style="display: {{ $currentStep == 10 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Marketplace Launch Checklist</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Confirm listing checklist statuses and select launch readiness.</p>
 
@@ -1304,9 +1502,48 @@
     </div>
 
     <!-- ================== STEP 11: ORDER MANAGEMENT ================== -->
-    <div id="step-form-container-11" class="step-form-content {{ $currentStep == 11 ? 'active' : '' }}" style="display: {{ $currentStep == 11 ? 'block' : 'none' }};">
+    <div id="step-form-container-11" class="step-form-content {{ $currentStep == 11 ? 'active' : '' }}" style="display: {{ $currentStep == 11 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Order Management</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Track marketplace sales, order details, delivery status, and carrier tracking info.</p>
+
+        <!-- Filters Section -->
+        <div class="card" style="padding: var(--spacing-4); margin-bottom: var(--spacing-6); background-color: var(--color-bg-base); border: 1px solid var(--color-border);">
+            <h3 style="font-size: var(--fs-xs); text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: var(--spacing-3); font-weight: var(--fw-semibold);">Filter Orders</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-3);">
+                <div>
+                    <label class="form-label" style="font-size: 10px;">Marketplace</label>
+                    <select id="filter_ord_marketplace" class="form-control" style="height: 32px;" onchange="runOrderFilters()">
+                        <option value="">All Marketplaces</option>
+                        @foreach($selectedMarketplaces as $m)
+                            <option value="{{ $m }}">{{ $m }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 10px;">Status</label>
+                    <select id="filter_ord_status" class="form-control" style="height: 32px;" onchange="runOrderFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="New">New</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 10px;">Product SKU</label>
+                    <select id="filter_ord_product" class="form-control" style="height: 32px;" onchange="runOrderFilters()">
+                        <option value="">All Products</option>
+                        @foreach($products as $p)
+                            <option value="{{ $p['sku'] }}">{{ $p['sku'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 10px;">Order Date</label>
+                    <input type="date" id="filter_ord_date" class="form-control" style="height: 32px;" oninput="runOrderFilters()">
+                </div>
+            </div>
+        </div>
 
         <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-11-form">
             @csrf
@@ -1318,10 +1555,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Orders Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('order')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Order
+                    + Add Order
                 </button>
             </div>
 
@@ -1383,9 +1617,29 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tracking Number</label>
+                        <input type="text" id="ord_tracking_number" class="form-control" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Carrier</label>
+                        <input type="text" id="ord_carrier" class="form-control" placeholder="e.g. FedEx" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tracking URL</label>
+                        <input type="url" id="ord_tracking_url" class="form-control" placeholder="https://..." style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Order Notes</label>
+                        <input type="text" id="ord_notes" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('order')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('order')">Save Order</button>
+                    <button type="button" class="btn btn-primary" onclick="addOrderRecord()">Save Order</button>
                 </div>
             </div>
 
@@ -1402,6 +1656,7 @@
                             <th>Qty</th>
                             <th>Amount</th>
                             <th>Status</th>
+                            <th>Tracking</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1420,7 +1675,7 @@
     </div>
 
     <!-- ================== STEP 12: MARKETPLACE ADVERTISING ================== -->
-    <div id="step-form-container-12" class="step-form-content {{ $currentStep == 12 ? 'active' : '' }}" style="display: {{ $currentStep == 12 ? 'block' : 'none' }};">
+    <div id="step-form-container-12" class="step-form-content {{ $currentStep == 12 ? 'active' : '' }}" style="display: {{ $currentStep == 12 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Marketplace Advertising</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Manage PPC campaigns, active budgets, target criteria, and optimization states.</p>
 
@@ -1434,10 +1689,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Campaigns Table</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('campaign')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Campaign
+                    + Add Campaign
                 </button>
             </div>
 
@@ -1480,6 +1732,22 @@
                         <input type="number" step="0.01" id="camp_daily_budget" class="form-control" style="height: 36px;">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Monthly Budget ($)</label>
+                        <input type="number" step="0.01" id="camp_monthly_budget" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="camp_start_date" class="form-control" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="camp_end_date" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label class="form-label">Campaign Goal</label>
                         <select id="camp_campaign_goal" class="form-control" style="height: 36px;">
                             <option value="Sales">Sales</option>
@@ -1488,19 +1756,34 @@
                             <option value="Brand Awareness">Brand Awareness</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Campaign Status</label>
+                        <select id="camp_campaign_status" class="form-control" style="height: 36px;">
+                            <option value="Draft">Draft</option>
+                            <option value="Active">Active</option>
+                            <option value="Paused">Paused</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Campaign Status</label>
-                    <select id="camp_campaign_status" class="form-control" style="height: 36px;">
-                        <option value="Draft">Draft</option>
-                        <option value="Active">Active</option>
-                        <option value="Paused">Paused</option>
-                        <option value="Completed">Completed</option>
-                    </select>
+                    <label class="form-label">Target Products (Select multiple)</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                        @foreach($products as $p)
+                            <label style="font-size: var(--fs-xs); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="camp_target_products_check" value="{{ $p['sku'] }}" style="accent-color: var(--color-primary);">
+                                {{ $p['product_name'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Campaign Notes</label>
+                    <textarea id="camp_notes" class="form-control" rows="2"></textarea>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('campaign')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('campaign')">Save Campaign</button>
+                    <button type="button" class="btn btn-primary" onclick="addCampaignRecord()">Save Campaign</button>
                 </div>
             </div>
 
@@ -1512,9 +1795,9 @@
                             <th>Campaign Name</th>
                             <th>Platform</th>
                             <th>Marketplace</th>
-                            <th>Type</th>
                             <th>Daily Budget</th>
                             <th>Goal</th>
+                            <th>Target SKU</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -1534,11 +1817,11 @@
     </div>
 
     <!-- ================== STEP 13: PHYSICAL RETAIL SETUP ================== -->
-    <div id="step-form-container-13" class="step-form-content {{ $currentStep == 13 ? 'active' : '' }}" style="display: {{ $currentStep == 13 ? 'block' : 'none' }};">
+    <div id="step-form-container-13" class="step-form-content {{ $currentStep == 13 ? 'active' : '' }}" style="display: {{ $currentStep == 13 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Physical Retail Setup (Optional)</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Enable physical retail preparation for catalog products, pricing sheets, and retailer target requirements.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="13">
             <input type="hidden" name="action" id="step-13-action" value="save_continue">
@@ -1598,7 +1881,54 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+
+                <div class="form-row" style="margin-top: var(--spacing-4);">
+                    <div class="form-group">
+                        <label class="form-label">Product Catalog File Upload</label>
+                        <input type="file" name="retail_catalog" class="form-control">
+                        @if(!empty($payload['retail_catalog']['url']))
+                            <div style="margin-top: 6px; font-size: var(--fs-xs);">
+                                Uploaded: <a href="{{ $payload['retail_catalog']['url'] }}" target="_blank" style="color: var(--color-primary); font-weight: var(--fw-semibold);">{{ $payload['retail_catalog']['name'] }}</a>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Wholesale Price List File</label>
+                        <input type="file" name="retail_price_list" class="form-control">
+                        @if(!empty($payload['retail_price_list']['url']))
+                            <div style="margin-top: 6px; font-size: var(--fs-xs);">
+                                Uploaded: <a href="{{ $payload['retail_price_list']['url'] }}" target="_blank" style="color: var(--color-primary); font-weight: var(--fw-semibold);">{{ $payload['retail_price_list']['name'] }}</a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top: var(--spacing-4);">
+                    <div class="form-group">
+                        <label class="form-label">Target Retailers (Check multiple)</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                            @foreach(['Walmart', 'Target', 'Costco', 'Best Buy', 'Local Boutiques'] as $tr)
+                                <label style="font-size: var(--fs-xs); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                    <input type="checkbox" name="target_retailers[]" value="{{ $tr }}" {{ in_array($tr, old('target_retailers', $payload['target_retailers'] ?? [])) ? 'checked' : '' }} style="accent-color: var(--color-primary);">
+                                    {{ $tr }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Locations (Check multiple)</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                            @foreach(['New York', 'California', 'Texas', 'Florida', 'Midwest'] as $loc)
+                                <label style="font-size: var(--fs-xs); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                    <input type="checkbox" name="target_locations[]" value="{{ $loc }}" {{ in_array($loc, old('target_locations', $payload['target_locations'] ?? [])) ? 'checked' : '' }} style="accent-color: var(--color-primary);">
+                                    {{ $loc }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: var(--spacing-4);">
                     <label class="form-label">Retail Requirements</label>
                     <textarea name="retail_requirements" class="form-control" rows="3">{{ old('retail_requirements', $payload['retail_requirements'] ?? '') }}</textarea>
                 </div>
@@ -1615,24 +1945,22 @@
     </div>
 
     <!-- ================== STEP 14: RETAILER / DISTRIBUTOR COORDINATION ================== -->
-    <div id="step-form-container-14" class="step-form-content {{ $currentStep == 14 ? 'active' : '' }}" style="display: {{ $currentStep == 14 ? 'block' : 'none' }};">
+    <div id="step-form-container-14" class="step-form-content {{ $currentStep == 14 ? 'active' : '' }}" style="display: {{ $currentStep == 14 ? 'none' : 'none' }};">
         <h2 style="font-size: var(--fs-xl); margin-bottom: var(--spacing-1);">Retailer / Distributor Coordination</h2>
         <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">Manage connections with buyers, wholesalers, and physical distributors.</p>
 
-        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-14-form">
+        <form action="{{ route('services.save_step', 'marketplace-retail') }}" method="POST" id="step-14-form" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="step" value="14">
             <input type="hidden" name="action" id="step-14-action" value="save_continue">
 
             <div id="retailers-hidden-inputs-container"></div>
+            <div id="retailers-files-container" style="display: none;"></div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
                 <h3 style="font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--color-text-primary);">Retailers List</h3>
                 <button type="button" class="btn btn-primary" style="height: 30px; font-size: var(--fs-xs); display: flex; align-items: center; gap: 4px;" onclick="showAddForm('retailer')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Retailer / Distributor
+                    + Add Retailer / Distributor
                 </button>
             </div>
 
@@ -1669,6 +1997,36 @@
                         <input type="text" id="ret_phone" class="form-control" style="height: 36px;">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Website</label>
+                        <input type="url" id="ret_website" class="form-control" placeholder="https://..." style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Location / Address</label>
+                        <input type="text" id="ret_location" class="form-control" placeholder="e.g. New York, USA" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">MOQ Required</label>
+                        <input type="number" id="ret_moq" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Target Wholesale Price ($)</label>
+                        <input type="number" step="0.01" id="ret_wholesale_price" class="form-control" style="height: 36px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Contact Date</label>
+                        <input type="date" id="ret_contact_date" class="form-control" style="height: 36px;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Documents / Agreements Upload</label>
+                        <input type="file" id="ret_agreements" multiple class="form-control">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Status</label>
                         <select id="ret_status" class="form-control" style="height: 36px;">
                             <option value="Prospect">Prospect</option>
@@ -1680,9 +2038,24 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Products Interested In (Select multiple)</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                        @foreach($products as $p)
+                            <label style="font-size: var(--fs-xs); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="ret_products_check" value="{{ $p['sku'] }}" style="accent-color: var(--color-primary);">
+                                {{ $p['product_name'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea id="ret_notes" class="form-control" rows="2"></textarea>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: var(--spacing-3); margin-top: var(--spacing-2);">
                     <button type="button" class="btn btn-secondary" onclick="hideAddForm('retailer')">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addListItem('retailer')">Save Prospect</button>
+                    <button type="button" class="btn btn-primary" onclick="addRetailerRecord()">Save Prospect</button>
                 </div>
             </div>
 
@@ -1694,9 +2067,11 @@
                             <th>Name</th>
                             <th>Type</th>
                             <th>Contact Person</th>
-                            <th>Email</th>
-                            <th>Phone</th>
+                            <th>Email/Phone</th>
+                            <th>Location</th>
+                            <th>MOQ/Price</th>
                             <th>Status</th>
+                            <th>Files</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1719,7 +2094,7 @@
 
 @section('dashboard_scripts')
 <script>
-    // State management for repeatable records
+    // Local data arrays from payload
     const listStore = {
         account: @json($accounts),
         product: @json($products),
@@ -1729,10 +2104,20 @@
         inventory: @json($inventories),
         order: @json($orders),
         campaign: @json($campaigns),
-        retailer: @json($retailers)
+        retailer: @json($retailers),
+        verification: @json($payload['verification_documents'] ?? [])
     };
 
-    // Keep active step scroll positioning
+    // Tracking uploaded dynamic inputs to append before form submit
+    const fileInputsStore = {
+        account: {},
+        product: {},
+        listing: {},
+        retailer: {},
+        verification: {}
+    };
+
+    // Scroll horizontal stepper
     const stepperContainer = document.getElementById('stepper-scroll-container');
     function scrollStepper(amount) {
         if (stepperContainer) {
@@ -1762,181 +2147,433 @@
         if (input) input.value = sku;
     }
 
-    // Show inline form for adding items
+    // Show/Hide inline forms
     function showAddForm(type) {
         const form = document.getElementById(`add-${type}-form`);
         if (form) form.style.display = 'block';
     }
-
-    // Hide inline form
     function hideAddForm(type) {
         const form = document.getElementById(`add-${type}-form`);
         if (form) form.style.display = 'none';
     }
 
-    // Add Item to local arrays and update tables
-    function addListItem(type) {
-        let item = {};
-        
-        if (type === 'account') {
-            item = {
-                marketplace_name: document.getElementById('acc_marketplace_name').value,
-                account_status: document.getElementById('acc_account_status').value,
-                seller_name: document.getElementById('acc_seller_name').value,
-                account_email: document.getElementById('acc_account_email').value,
-                account_id: document.getElementById('acc_account_id').value,
-                store_url: document.getElementById('acc_store_url').value,
-                created_date: document.getElementById('acc_created_date').value,
-                notes: document.getElementById('acc_notes').value
-            };
-        } else if (type === 'product') {
-            item = {
-                product_name: document.getElementById('prod_product_name').value,
-                sku: document.getElementById('prod_sku').value,
-                product_category: document.getElementById('prod_product_category').value,
-                brand_name: document.getElementById('prod_brand_name').value,
-                product_description: document.getElementById('prod_product_description').value,
-                variants: document.getElementById('prod_variants').value,
-                upc_gtin: document.getElementById('prod_upc_gtin').value,
-                product_weight: document.getElementById('prod_product_weight').value,
-                product_cost: document.getElementById('prod_product_cost').value,
-                target_selling_price: document.getElementById('prod_target_selling_price').value,
-                inventory_quantity: document.getElementById('prod_inventory_quantity').value,
-                product_status: document.getElementById('prod_product_status').value
-            };
-        } else if (type === 'listing') {
-            item = {
-                product_sku: document.getElementById('list_product_sku').value,
-                marketplace: document.getElementById('list_marketplace').value,
-                listing_title: document.getElementById('list_listing_title').value,
-                listing_description: document.getElementById('list_listing_description').value,
-                category: document.getElementById('list_category').value,
-                sku: document.getElementById('list_sku').value,
-                marketplace_product_id: document.getElementById('list_marketplace_product_id').value,
-                listing_status: document.getElementById('list_listing_status').value
-            };
-        } else if (type === 'optimization') {
-            item = {
-                listing_id: document.getElementById('opt_listing_id').value,
-                primary_keyword: document.getElementById('opt_primary_keyword').value,
-                optimized_title: document.getElementById('opt_optimized_title').value,
-                optimized_description: document.getElementById('opt_optimized_description').value,
-                image_optimization_status: document.getElementById('opt_image_optimization_status').value,
-                keyword_optimization_status: document.getElementById('opt_keyword_optimization_status').value,
-                optimization_score: document.getElementById('opt_optimization_score').value,
-                optimization_notes: document.getElementById('opt_optimization_notes').value
-            };
-        } else if (type === 'pricing') {
-            item = {
-                product_sku: document.getElementById('pr_product_sku').value,
-                marketplace: document.getElementById('pr_marketplace').value,
-                base_price: document.getElementById('pr_base_price').value,
-                marketplace_price: document.getElementById('pr_marketplace_price').value,
-                minimum_price: document.getElementById('pr_minimum_price').value,
-                maximum_price: document.getElementById('pr_maximum_price').value,
-                pricing_status: document.getElementById('pr_pricing_status').value
-            };
-        } else if (type === 'inventory') {
-            item = {
-                product_sku: document.getElementById('inv_product_sku').value,
-                sku: document.getElementById('inv_sku').value,
-                marketplace: document.getElementById('inv_marketplace').value,
-                available_quantity: document.getElementById('inv_available_quantity').value,
-                reorder_level: document.getElementById('inv_reorder_level').value,
-                inventory_status: document.getElementById('inv_inventory_status').value,
-                warehouse_location: document.getElementById('inv_warehouse_location').value,
-                auto_inventory_sync: document.querySelector('input[name="auto_sync_field"]:checked').value
-            };
-        } else if (type === 'order') {
-            item = {
-                marketplace: document.getElementById('ord_marketplace').value,
-                order_id: document.getElementById('ord_order_id').value,
-                customer_name: document.getElementById('ord_customer_name').value,
-                order_date: document.getElementById('ord_order_date').value,
-                product_sku: document.getElementById('ord_product_sku').value,
-                quantity: document.getElementById('ord_quantity').value,
-                order_amount: document.getElementById('ord_order_amount').value,
-                order_status: document.getElementById('ord_order_status').value
-            };
-        } else if (type === 'campaign') {
-            item = {
-                advertising_platform: document.getElementById('camp_advertising_platform').value,
-                campaign_name: document.getElementById('camp_campaign_name').value,
-                marketplace: document.getElementById('camp_marketplace').value,
-                campaign_type: document.getElementById('camp_campaign_type').value,
-                daily_budget: document.getElementById('camp_daily_budget').value,
-                campaign_goal: document.getElementById('camp_campaign_goal').value,
-                campaign_status: document.getElementById('camp_campaign_status').value
-            };
-        } else if (type === 'retailer') {
-            item = {
-                retailer_name: document.getElementById('ret_retailer_name').value,
-                type: document.getElementById('ret_type').value,
-                contact_person: document.getElementById('ret_contact_person').value,
-                email: document.getElementById('ret_email').value,
-                phone: document.getElementById('ret_phone').value,
-                status: document.getElementById('ret_status').value
-            };
+    // Dynamic dynamic multi-file input cloning helpers
+    function moveAndStoreFiles(type, inputId, index, isMultiple = true) {
+        const originalInput = document.getElementById(inputId);
+        if (!originalInput || originalInput.files.length === 0) return;
+
+        // Create container wrapper for this item index
+        const filesContainer = document.getElementById(`${type}s-files-container`);
+        if (!filesContainer) return;
+
+        let itemWrapper = document.getElementById(`${type}-file-item-${index}`);
+        if (!itemWrapper) {
+            itemWrapper = document.createElement('div');
+            itemWrapper.id = `${type}-file-item-${index}`;
+            filesContainer.appendChild(itemWrapper);
         }
 
-        // Validate basic requirement
-        const firstVal = Object.values(item)[0];
-        if (!firstVal) {
-            alert('Please fill out all required details.');
+        // Clone/Move original input element
+        const nameAttr = isMultiple ? `${type}s[${index}][${inputId.split('_')[1]}][]` : `${type}s[${index}][${inputId.split('_')[1]}]`;
+        originalInput.name = nameAttr;
+        originalInput.id = `${inputId}_stored_${index}`;
+        itemWrapper.appendChild(originalInput);
+
+        // Replace original input with a new blank file input
+        const newInput = document.createElement('input');
+        newInput.type = 'file';
+        newInput.id = inputId;
+        if (isMultiple) newInput.multiple = true;
+        newInput.className = 'form-control';
+        originalInput.parentNode.replaceChild(newInput, originalInput);
+    }
+
+    // Add items
+    function addMarketplaceAccount(marketName, slug) {
+        const index = listStore.account.length;
+        const item = {
+            marketplace_name: marketName,
+            account_status: document.getElementById(`acc_account_status_${slug}`).value,
+            seller_name: document.getElementById(`acc_seller_name_${slug}`).value,
+            account_email: document.getElementById(`acc_account_email_${slug}`).value,
+            account_id: document.getElementById(`acc_account_id_${slug}`).value,
+            store_url: document.getElementById(`acc_store_url_${slug}`).value,
+            created_date: document.getElementById(`acc_created_date_${slug}`).value,
+            notes: document.getElementById(`acc_notes_${slug}`).value
+        };
+
+        if (!item.seller_name || !item.account_email) {
+            alert('Seller Name and Account Email are required.');
             return;
         }
 
-        // Push and re-render
-        listStore[type].push(item);
-        renderTable(type);
-        hideAddForm(type);
+        // Store selected files
+        moveAndStoreFiles('account', `acc_documents_${slug}`, index, true);
+
+        listStore.account.push(item);
+        renderTable('account');
+        hideAddForm(`account_${slug}`);
     }
 
-    // Remove Item from local array
+    function addVerificationDoc() {
+        const index = listStore.verification.length;
+        const item = {
+            name: document.getElementById('vd_name').value,
+            type: document.getElementById('vd_type').value,
+            status: document.getElementById('vd_status').value
+        };
+
+        if (!item.name) {
+            alert('Document Name is required.');
+            return;
+        }
+
+        moveAndStoreFiles('verification', 'vd_file', index, false);
+
+        listStore.verification.push(item);
+        renderTable('verification');
+        hideAddForm('verification');
+    }
+
+    function addProductToCatalog() {
+        const index = listStore.product.length;
+        const item = {
+            product_name: document.getElementById('prod_product_name').value,
+            sku: document.getElementById('prod_sku').value,
+            product_category: document.getElementById('prod_product_category').value,
+            brand_name: document.getElementById('prod_brand_name').value,
+            product_description: document.getElementById('prod_product_description').value,
+            variants: document.getElementById('prod_variants').value,
+            upc_gtin: document.getElementById('prod_upc_gtin').value,
+            product_weight: document.getElementById('prod_product_weight').value,
+            product_cost: document.getElementById('prod_product_cost').value,
+            target_selling_price: document.getElementById('prod_target_selling_price').value,
+            inventory_quantity: document.getElementById('prod_inventory_quantity').value,
+            product_status: document.getElementById('prod_product_status').value,
+            dimensions_length: document.getElementById('prod_dim_l').value,
+            dimensions_width: document.getElementById('prod_dim_w').value,
+            dimensions_height: document.getElementById('prod_dim_h').value
+        };
+
+        if (!item.product_name || !item.sku) {
+            alert('Product Name and SKU are required.');
+            return;
+        }
+
+        moveAndStoreFiles('product', 'prod_images', index, true);
+        moveAndStoreFiles('product', 'prod_video', index, false);
+
+        listStore.product.push(item);
+        renderTable('product');
+        hideAddForm('product');
+    }
+
+    function addListingRecord() {
+        const index = listStore.listing.length;
+        const item = {
+            product_sku: document.getElementById('list_product_sku').value,
+            marketplace: document.getElementById('list_marketplace').value,
+            listing_title: document.getElementById('list_listing_title').value,
+            listing_description: document.getElementById('list_listing_description').value,
+            category: document.getElementById('list_category').value,
+            sku: document.getElementById('list_sku').value,
+            marketplace_product_id: document.getElementById('list_marketplace_product_id').value,
+            listing_status: document.getElementById('list_listing_status').value,
+            bullet_points: document.getElementById('list_bullet_points').value.split(',').map(s => s.trim())
+        };
+
+        if (!item.listing_title || !item.sku) {
+            alert('Listing Title and Store SKU are required.');
+            return;
+        }
+
+        moveAndStoreFiles('listing', 'list_images', index, true);
+
+        listStore.listing.push(item);
+        renderTable('listing');
+        hideAddForm('listing');
+    }
+
+    function addOptimizationRecord() {
+        const item = {
+            listing_id: document.getElementById('opt_listing_id').value,
+            primary_keyword: document.getElementById('opt_primary_keyword').value,
+            seo_keywords: document.getElementById('opt_seo_keywords').value,
+            secondary_keywords: document.getElementById('opt_secondary_keywords').value,
+            optimized_title: document.getElementById('opt_optimized_title').value,
+            optimized_description: document.getElementById('opt_optimized_description').value,
+            image_optimization_status: document.getElementById('opt_image_optimization_status').value,
+            keyword_optimization_status: document.getElementById('opt_keyword_optimization_status').value,
+            optimization_score: document.getElementById('opt_optimization_score').value,
+            optimization_notes: document.getElementById('opt_optimization_notes').value
+        };
+
+        if (!item.primary_keyword || !item.optimized_title) {
+            alert('Primary Keyword and Optimized Title are required.');
+            return;
+        }
+
+        listStore.optimization.push(item);
+        renderTable('optimization');
+        hideAddForm('optimization');
+    }
+
+    function syncPricingCost(sku) {
+        const select = document.getElementById('pr_product_sku');
+        const cost = select.options[select.selectedIndex].getAttribute('data-cost') || 0;
+        document.getElementById('pr_base_price').value = cost;
+        runPricingCalc();
+    }
+
+    function runPricingCalc() {
+        const base = parseFloat(document.getElementById('pr_base_price').value) || 0;
+        const market = parseFloat(document.getElementById('pr_marketplace_price').value) || 0;
+        const discType = document.getElementById('pr_discount_type').value;
+        const discVal = parseFloat(document.getElementById('pr_discount_value').value) || 0;
+
+        let discount = 0;
+        if (discType === 'Percentage') {
+            discount = market * (discVal / 100);
+        } else {
+            discount = discVal;
+        }
+
+        const sale = Math.max(market - discount, 0);
+
+        // Display
+        document.getElementById('pr_sale_price').value = sale.toFixed(2);
+        document.getElementById('calc_base_cost').innerText = '$' + base.toFixed(2);
+        document.getElementById('calc_market_price').innerText = '$' + market.toFixed(2);
+        document.getElementById('calc_discount').innerText = '$' + discount.toFixed(2);
+        document.getElementById('calc_final_price').innerText = '$' + sale.toFixed(2);
+    }
+
+    function addPricingRecord() {
+        const item = {
+            product_sku: document.getElementById('pr_product_sku').value,
+            marketplace: document.getElementById('pr_marketplace').value,
+            base_price: document.getElementById('pr_base_price').value,
+            marketplace_price: document.getElementById('pr_marketplace_price').value,
+            sale_price: document.getElementById('pr_sale_price').value,
+            minimum_price: document.getElementById('pr_minimum_price').value,
+            maximum_price: document.getElementById('pr_maximum_price').value,
+            discount_type: document.getElementById('pr_discount_type').value,
+            discount_value: document.getElementById('pr_discount_value').value,
+            start_date: document.getElementById('pr_start_date').value,
+            end_date: document.getElementById('pr_end_date').value,
+            pricing_status: document.getElementById('pr_pricing_status').value
+        };
+
+        if (!item.product_sku || !item.marketplace_price) {
+            alert('Product SKU and Marketplace Price are required.');
+            return;
+        }
+
+        listStore.pricing.push(item);
+        renderTable('pricing');
+        hideAddForm('pricing');
+    }
+
+    function addInventoryRecord() {
+        const item = {
+            product_sku: document.getElementById('inv_product_sku').value,
+            sku: document.getElementById('inv_sku').value,
+            marketplace: document.getElementById('inv_marketplace').value,
+            available_quantity: document.getElementById('inv_available_quantity').value,
+            reserved_quantity: document.getElementById('inv_reserved_quantity').value,
+            reorder_level: document.getElementById('inv_reorder_level').value,
+            inventory_status: document.getElementById('inv_inventory_status').value,
+            warehouse_location: document.getElementById('inv_warehouse_location').value,
+            auto_inventory_sync: document.querySelector('input[name="auto_sync_field"]:checked').value,
+            notes: document.getElementById('inv_notes').value
+        };
+
+        if (!item.product_sku || !item.available_quantity) {
+            alert('Product and Available Quantity are required.');
+            return;
+        }
+
+        // Prevent duplicate records for same company + product + marketplace
+        const exists = listStore.inventory.some(i => i.product_sku === item.product_sku && i.marketplace === item.marketplace);
+        if (exists) {
+            alert('Inventory record already exists for this Product + Marketplace combination.');
+            return;
+        }
+
+        listStore.inventory.push(item);
+        renderTable('inventory');
+        hideAddForm('inventory');
+    }
+
+    function addOrderRecord() {
+        const item = {
+            marketplace: document.getElementById('ord_marketplace').value,
+            order_id: document.getElementById('ord_order_id').value,
+            customer_name: document.getElementById('ord_customer_name').value,
+            order_date: document.getElementById('ord_order_date').value,
+            product_sku: document.getElementById('ord_product_sku').value,
+            quantity: document.getElementById('ord_quantity').value,
+            order_amount: document.getElementById('ord_order_amount').value,
+            order_status: document.getElementById('ord_order_status').value,
+            tracking_number: document.getElementById('ord_tracking_number').value,
+            carrier: document.getElementById('ord_carrier').value,
+            tracking_url: document.getElementById('ord_tracking_url').value,
+            notes: document.getElementById('ord_notes').value
+        };
+
+        if (!item.order_id || !item.customer_name) {
+            alert('Order ID and Customer Name are required.');
+            return;
+        }
+
+        listStore.order.push(item);
+        renderTable('order');
+        hideAddForm('order');
+    }
+
+    function addCampaignRecord() {
+        // Collect targeted products checked checkboxes
+        const targets = [];
+        document.querySelectorAll('input[name="camp_target_products_check"]:checked').forEach(c => {
+            targets.push(c.value);
+        });
+
+        const item = {
+            advertising_platform: document.getElementById('camp_advertising_platform').value,
+            campaign_name: document.getElementById('camp_campaign_name').value,
+            marketplace: document.getElementById('camp_marketplace').value,
+            campaign_type: document.getElementById('camp_campaign_type').value,
+            daily_budget: document.getElementById('camp_daily_budget').value,
+            monthly_budget: document.getElementById('camp_monthly_budget').value,
+            start_date: document.getElementById('camp_start_date').value,
+            end_date: document.getElementById('camp_end_date').value,
+            campaign_goal: document.getElementById('camp_campaign_goal').value,
+            campaign_status: document.getElementById('camp_campaign_status').value,
+            target_products: targets,
+            notes: document.getElementById('camp_notes').value
+        };
+
+        if (!item.campaign_name || !item.daily_budget) {
+            alert('Campaign Name and Daily Budget are required.');
+            return;
+        }
+
+        listStore.campaign.push(item);
+        renderTable('campaign');
+        hideAddForm('campaign');
+    }
+
+    function addRetailerRecord() {
+        const index = listStore.retailer.length;
+        const targets = [];
+        document.querySelectorAll('input[name="ret_products_check"]:checked').forEach(c => {
+            targets.push(c.value);
+        });
+
+        const item = {
+            retailer_name: document.getElementById('ret_retailer_name').value,
+            type: document.getElementById('ret_type').value,
+            contact_person: document.getElementById('ret_contact_person').value,
+            email: document.getElementById('ret_email').value,
+            phone: document.getElementById('ret_phone').value,
+            status: document.getElementById('ret_status').value,
+            website: document.getElementById('ret_website').value,
+            location: document.getElementById('ret_location').value,
+            moq: document.getElementById('ret_moq').value,
+            wholesale_price: document.getElementById('ret_wholesale_price').value,
+            contact_date: document.getElementById('ret_contact_date').value,
+            products_interested: targets,
+            notes: document.getElementById('ret_notes').value
+        };
+
+        if (!item.retailer_name || !item.contact_person) {
+            alert('Retailer Name and Contact Person are required.');
+            return;
+        }
+
+        moveAndStoreFiles('retailer', 'ret_agreements', index, true);
+
+        listStore.retailer.push(item);
+        renderTable('retailer');
+        hideAddForm('retailer');
+    }
+
+    // Remove item helper
     function removeListItem(type, idx) {
         listStore[type].splice(idx, 1);
         renderTable(type);
+
+        // Delete associated stored files if any
+        const wrapper = document.getElementById(`${type}-file-item-${idx}`);
+        if (wrapper) wrapper.remove();
     }
 
-    // Render tables and sync hidden input values
+    // Table render engine
     function renderTable(type) {
         const tbody = document.querySelector(`#${type}s-table tbody`);
+        
+        // Custom check for step 2 marketplaces split tables
+        if (type === 'account') {
+            @if(!empty($selectedMarketplaces))
+                @foreach($selectedMarketplaces as $market)
+                    @php $slug = \Str::slug($market); @endphp
+                    const tbody_{{ $slug }} = document.querySelector(`#accounts-{{ $slug }}-table tbody`);
+                    if (tbody_{{ $slug }}) {
+                        tbody_{{ $slug }}.innerHTML = '';
+                        listStore.account.filter(a => a.marketplace_name === '{{ $market }}').forEach((item, idx) => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><strong>${item.seller_name}</strong></td>
+                                <td>${item.account_email}</td>
+                                <td><code>${item.account_id}</code></td>
+                                <td><span class="badge badge-info">${item.account_status}</span></td>
+                                <td>${item.created_date}</td>
+                                <td><span style="font-size: 10px;">${item.documents ? item.documents.length + ' file(s)' : '0 files'}</span></td>
+                                <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('account', ${idx})">Delete</button></td>
+                            `;
+                            tbody_{{ $slug }}.appendChild(tr);
+                        });
+                    }
+                @endforeach
+            @endif
+            updateHiddenInputs('accounts', listStore.account);
+            return;
+        }
+
         if (!tbody) return;
         tbody.innerHTML = '';
-
         const list = listStore[type];
-        
+
         list.forEach((item, idx) => {
             const tr = document.createElement('tr');
-            
-            if (type === 'account') {
+
+            if (type === 'verification') {
                 tr.innerHTML = `
-                    <td><strong>${item.marketplace_name}</strong></td>
-                    <td>${item.seller_name}</td>
-                    <td>${item.account_email}</td>
-                    <td><code>${item.account_id}</code></td>
-                    <td><span class="badge badge-info">${item.account_status}</span></td>
-                    <td>${item.created_date}</td>
-                    <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('account', ${idx})">Delete</button></td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.type}</td>
+                    <td><span class="badge badge-info">${item.status}</span></td>
+                    <td><span style="font-size: 10px;">${item.file ? 'Uploaded File' : 'No file'}</span></td>
+                    <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('verification', ${idx})">Delete</button></td>
                 `;
             } else if (type === 'product') {
                 tr.innerHTML = `
                     <td><strong>${item.product_name}</strong></td>
                     <td><code>${item.sku}</code></td>
                     <td>${item.product_category}</td>
-                    <td>$${parseFloat(item.product_cost).toFixed(2)}</td>
                     <td>$${parseFloat(item.target_selling_price).toFixed(2)}</td>
                     <td>${item.inventory_quantity}</td>
+                    <td><span style="font-size: 10px;">Images: ${item.images ? item.images.length : 0} • Video: ${item.video ? 'Yes' : 'No'}</span></td>
                     <td><span class="badge badge-success">${item.product_status}</span></td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('product', ${idx})">Delete</button></td>
                 `;
             } else if (type === 'listing') {
                 tr.innerHTML = `
                     <td><code>${item.product_sku}</code></td>
-                    <td>${item.marketplace}</td>
-                    <td><strong>${item.listing_title}</strong></td>
+                    <td><strong>${item.marketplace}</strong></td>
+                    <td>${item.listing_title}</td>
                     <td><code>${item.sku}</code></td>
                     <td><code>${item.marketplace_product_id}</code></td>
+                    <td><span style="font-size: 10px;">Images: ${item.images ? item.images.length : 0}</span></td>
                     <td><span class="badge badge-success">${item.listing_status}</span></td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('listing', ${idx})">Delete</button></td>
                 `;
@@ -1953,11 +2590,12 @@
             } else if (type === 'pricing') {
                 tr.innerHTML = `
                     <td><code>${item.product_sku}</code></td>
-                    <td>${item.marketplace}</td>
+                    <td><strong>${item.marketplace}</strong></td>
                     <td>$${parseFloat(item.base_price).toFixed(2)}</td>
                     <td>$${parseFloat(item.marketplace_price).toFixed(2)}</td>
-                    <td>$${parseFloat(item.minimum_price).toFixed(2)}</td>
-                    <td>$${parseFloat(item.maximum_price).toFixed(2)}</td>
+                    <td><strong>$${parseFloat(item.sale_price).toFixed(2)}</strong></td>
+                    <td>Min: $${item.minimum_price} • Max: $${item.maximum_price}</td>
+                    <td>${item.discount_value} (${item.discount_type})</td>
                     <td><span class="badge badge-success">${item.pricing_status}</span></td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('pricing', ${idx})">Delete</button></td>
                 `;
@@ -1965,8 +2603,9 @@
                 tr.innerHTML = `
                     <td><code>${item.product_sku}</code></td>
                     <td><code>${item.sku}</code></td>
-                    <td>${item.marketplace}</td>
+                    <td><strong>${item.marketplace}</strong></td>
                     <td><strong>${item.available_quantity}</strong></td>
+                    <td>${item.reserved_quantity}</td>
                     <td>${item.reorder_level}</td>
                     <td>${item.warehouse_location}</td>
                     <td><span class="badge badge-info">${item.auto_inventory_sync}</span></td>
@@ -1976,13 +2615,14 @@
             } else if (type === 'order') {
                 tr.innerHTML = `
                     <td><code>${item.order_id}</code></td>
-                    <td>${item.marketplace}</td>
-                    <td><strong>${item.customer_name}</strong></td>
+                    <td><strong>${item.marketplace}</strong></td>
+                    <td>${item.customer_name}</td>
                     <td>${item.order_date}</td>
                     <td><code>${item.product_sku}</code></td>
                     <td>${item.quantity}</td>
-                    <td>$${parseFloat(item.order_amount).toFixed(2)}</td>
+                    <td><strong>$${parseFloat(item.order_amount).toFixed(2)}</strong></td>
                     <td><span class="badge badge-warning">${item.order_status}</span></td>
+                    <td><code>${item.tracking_number || '-'}</code> (${item.carrier || '-'})</td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('order', ${idx})">Delete</button></td>
                 `;
             } else if (type === 'campaign') {
@@ -1990,9 +2630,9 @@
                     <td><strong>${item.campaign_name}</strong></td>
                     <td>${item.advertising_platform}</td>
                     <td>${item.marketplace}</td>
-                    <td>${item.campaign_type}</td>
                     <td>$${parseFloat(item.daily_budget).toFixed(2)}</td>
                     <td>${item.campaign_goal}</td>
+                    <td><code>${item.target_products ? item.target_products.join(', ') : '-'}</code></td>
                     <td><span class="badge badge-success">${item.campaign_status}</span></td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('campaign', ${idx})">Delete</button></td>
                 `;
@@ -2001,9 +2641,11 @@
                     <td><strong>${item.retailer_name}</strong></td>
                     <td>${item.type}</td>
                     <td>${item.contact_person}</td>
-                    <td>${item.email}</td>
-                    <td>${item.phone}</td>
+                    <td>${item.email} • ${item.phone}</td>
+                    <td>${item.location}</td>
+                    <td>MOQ: ${item.moq} • Wholesale: $${item.wholesale_price}</td>
                     <td><span class="badge badge-warning">${item.status}</span></td>
+                    <td><span style="font-size: 10px;">Files: ${item.agreements ? item.agreements.length : 0}</span></td>
                     <td><button type="button" class="btn btn-secondary" style="height: 24px; padding: 0 8px; font-size: 10px; color: var(--color-danger);" onclick="removeListItem('retailer', ${idx})">Delete</button></td>
                 `;
             }
@@ -2011,8 +2653,9 @@
             tbody.appendChild(tr);
         });
 
-        // Update hidden inputs for array submission
-        updateHiddenInputs(type === 'account' ? 'accounts' : 
+        // Sync inputs
+        updateHiddenInputs(type === 'verification' ? 'verification_documents' : 
+                           type === 'account' ? 'accounts' : 
                            type === 'product' ? 'products' : 
                            type === 'listing' ? 'listings' : 
                            type === 'optimization' ? 'optimizations' : 
@@ -2022,7 +2665,37 @@
                            type === 'campaign' ? 'campaigns' : 'retailers', list);
     }
 
-    // Sync array helper to hidden input list
+    // Run Order filters dynamically in the frontend!
+    function runOrderFilters() {
+        const m = document.getElementById('filter_ord_marketplace').value.toLowerCase();
+        const s = document.getElementById('filter_ord_status').value.toLowerCase();
+        const p = document.getElementById('filter_ord_product').value.toLowerCase();
+        const d = document.getElementById('filter_ord_date').value;
+
+        const rows = document.querySelectorAll('#orders-table tbody tr');
+        rows.forEach(tr => {
+            const cells = tr.getElementsByTagName('td');
+            if (cells.length < 8) return;
+
+            const orderMarket = cells[1].innerText.toLowerCase();
+            const orderDate = cells[3].innerText;
+            const orderProduct = cells[4].innerText.toLowerCase();
+            const orderStatus = cells[7].innerText.toLowerCase();
+
+            const matchMarket = !m || orderMarket.includes(m);
+            const matchStatus = !s || orderStatus.includes(s);
+            const matchProduct = !p || orderProduct.includes(p);
+            const matchDate = !d || orderDate.includes(d);
+
+            if (matchMarket && matchStatus && matchProduct && matchDate) {
+                tr.style.display = '';
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+    }
+
+    // Sync arrays to Laravel form elements
     function updateHiddenInputs(key, array) {
         const container = document.getElementById(key + '-hidden-inputs-container');
         if (!container) return;
@@ -2033,13 +2706,13 @@
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = `${key}[${index}][${field}]`;
-                input.value = val;
+                input.value = Array.isArray(val) ? JSON.stringify(val) : val;
                 container.appendChild(input);
             });
         });
     }
 
-    // Toggle multi-select card checkbox
+    // Toggle multi select cards
     function toggleCheckboxCard(cardElement, checkboxId) {
         const checkbox = document.getElementById(checkboxId);
         if (checkbox) {
@@ -2052,14 +2725,14 @@
         }
     }
 
-    // Jump between step container display
+    // Stepper wizard navigation Jumps
     function jumpToStep(stepNumber) {
         for (let i = 1; i <= 14; i++) {
             const form = document.getElementById('step-form-container-' + i);
             if (form) {
                 form.style.display = (i === stepNumber) ? 'block' : 'none';
             }
-            
+
             const items = document.querySelectorAll('.step-item');
             if (items[i-1]) {
                 if (i === stepNumber) {
@@ -2071,13 +2744,12 @@
         }
     }
 
-    // Initialize all tables on DOM load
     document.addEventListener('DOMContentLoaded', function() {
-        // Init target countries multi-select
         initCustomMultiselect('target_countries_container');
 
         // Init tables
         renderTable('account');
+        renderTable('verification');
         renderTable('product');
         renderTable('listing');
         renderTable('optimization');
