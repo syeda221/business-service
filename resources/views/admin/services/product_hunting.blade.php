@@ -84,12 +84,12 @@
 
 <!-- Tabs Navigation -->
 <div class="tabs-navigation" style="margin-bottom: 0;">
-    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Wizard</button>
-    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Sourcing Dashboard</button>
+    <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Wizard</button>
+    <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Sourcing Dashboard</button>
 </div>
 
 <!-- ================== TAB 1: SETUP WIZARD ================== -->
-<div id="tab-content-wizard" class="tab-content active">
+<div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}">
     <!-- Horizontal Stepper (Scrollable Container with Nav Arrows) -->
     <div style="position: relative; width: 100%; margin-top: var(--spacing-2);">
         <!-- Scroll Left Button -->
@@ -1510,107 +1510,202 @@
 </div>
 
 <!-- ================== TAB 2: OVERVIEW DASHBOARD ================== -->
-<div id="tab-content-overview" class="tab-content">
-    @php
-        $completedStepsCount = 0;
-        $totalStepsCount = 13;
-        
-        $checklist = [
-            'Product Requirements' => !empty($payload['product_category']),
-            'Market Research' => !empty($payload['customer_segment']),
-            'Demand Analysis' => !empty($payload['demand_level']),
-            'Competitor Research' => !empty($payload['competitor_records']),
-            'Pricing & Profit' => !empty($payload['est_selling_price']),
-            'Product Validation' => !empty($payload['validation_status']),
-            'Supplier Research' => !empty($payload['supplier_records']),
-            'Supplier Comparison' => !empty($payload['ratings']),
-            'Sample Coordination' => !empty($payload['sample_status']),
-            'Quality Check' => !empty($payload['inspection_status']),
-            'Price & MOQ Negotiation' => !empty($payload['neg_status']),
-            'Manufacturing / Sourcing' => !empty($payload['mfg_status']),
-            'Final Product Approval' => ($status === 'completed'),
-        ];
-
-        foreach($checklist as $stepTitle => $isDone) {
-            if ($isDone) $completedStepsCount++;
-        }
-
-        $percentage = round(($completedStepsCount / $totalStepsCount) * 100);
-    @endphp
-
-    <div class="progress-banner">
-        <div class="progress-banner-header">
-            <div>
-                <h3 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-bottom: 2px;">Product Sourcing Progress</h3>
-                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary);">Overall research and validation checklist</p>
+<div id="tab-content-overview" class="tab-content {{ $status === 'completed' ? 'active' : '' }}">
+    @if($status === 'completed')
+        <div class="card" style="padding: var(--spacing-4);">
+            <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Completed Service Details</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border);">
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Step Name</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Status</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stepTitles as $stepNum => $stepTitle)
+                            <tr style="border-bottom: 1px solid var(--color-border-light);">
+                                <td style="padding: var(--spacing-3) var(--spacing-2); font-weight: var(--fw-medium); font-size: var(--fs-sm);">Step {{ $stepNum }}: {{ $stepTitle }}</td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2);"><span class="badge badge-success">Completed</span></td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2); text-align: right; white-space: nowrap;">
+                                    <button type="button" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; height: auto; margin-right: 4px;" onclick="openViewModal()">View</button>
+                                    <button type="button" class="btn btn-primary" style="font-size: 11px; padding: 4px 8px; height: auto;" onclick="startEditMode({{ $stepNum }})">Edit</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-            <div class="progress-percentage">{{ $percentage }}%</div>
         </div>
-        <div class="progress-bar-outer">
-            <div class="progress-bar-inner" style="width: {{ $percentage }}%;"></div>
-        </div>
-    </div>
+    @else
+        @php
+            $completedStepsCount = 0;
+            $totalStepsCount = 13;
+            
+            $checklist = [
+                'Product Requirements' => !empty($payload['product_category']),
+                'Market Research' => !empty($payload['customer_segment']),
+                'Demand Analysis' => !empty($payload['demand_level']),
+                'Competitor Research' => !empty($payload['competitor_records']),
+                'Pricing & Profit' => !empty($payload['est_selling_price']),
+                'Product Validation' => !empty($payload['validation_status']),
+                'Supplier Research' => !empty($payload['supplier_records']),
+                'Supplier Comparison' => !empty($payload['ratings']),
+                'Sample Coordination' => !empty($payload['sample_status']),
+                'Quality Check' => !empty($payload['inspection_status']),
+                'Price & MOQ Negotiation' => !empty($payload['neg_status']),
+                'Manufacturing / Sourcing' => !empty($payload['mfg_status']),
+                'Final Product Approval' => ($status === 'completed'),
+            ];
 
-    <!-- Calculations Grid -->
-    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-6);">
-        <div class="card" style="padding: var(--spacing-4); text-align: center;">
-            <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Current Step</span>
-            <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-primary);">Step {{ $currentStep }}</h4>
-        </div>
-        <div class="card" style="padding: var(--spacing-4); text-align: center;">
-            <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Completed Steps</span>
-            <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-success);">{{ $completedStepsCount }} / 13</h4>
-        </div>
-        <div class="card" style="padding: var(--spacing-4); text-align: center;">
-            <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Pending Steps</span>
-            <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-text-muted);">{{ 13 - $completedStepsCount }}</h4>
-        </div>
-        <div class="card" style="padding: var(--spacing-4); text-align: center;">
-            <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Validation Score</span>
-            <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-primary);">{{ $payload['cal_overall_score'] ?? '0.00' }}%</h4>
-        </div>
-    </div>
+            foreach($checklist as $stepTitle => $isDone) {
+                if ($isDone) $completedStepsCount++;
+            }
 
-    <!-- Step Progress Checklist -->
-    <div class="card" style="padding: var(--spacing-6);">
-        <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Sourcing Steps Checklist</h3>
-        <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
-            @php $stepNum = 1; @endphp
-            @foreach($stepTitles as $stepKey => $stepTitle)
-                @php
-                    $isDone = $checklist[$stepTitle] ?? false;
-                    $itemClass = 'not-started';
-                    if ($isDone) {
-                        $itemClass = 'completed';
-                    } elseif ($currentStep == $stepKey) {
-                        $itemClass = 'in-progress';
-                    }
-                @endphp
-                <div class="checklist-item {{ $itemClass }}" onclick="switchMainTab('wizard'); jumpToStep({{ $stepKey }})">
-                    <div class="checklist-left">
-                        <div class="checklist-marker">
+            $percentage = round(($completedStepsCount / $totalStepsCount) * 100);
+        @endphp
+
+        <div class="progress-banner">
+            <div class="progress-banner-header">
+                <div>
+                    <h3 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-bottom: 2px;">Product Sourcing Progress</h3>
+                    <p style="font-size: var(--fs-sm); color: var(--color-text-secondary);">Overall research and validation checklist</p>
+                </div>
+                <div class="progress-percentage">{{ $percentage }}%</div>
+            </div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: {{ $percentage }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Calculations Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-6);">
+            <div class="card" style="padding: var(--spacing-4); text-align: center;">
+                <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Current Step</span>
+                <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-primary);">Step {{ $currentStep }}</h4>
+            </div>
+            <div class="card" style="padding: var(--spacing-4); text-align: center;">
+                <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Completed Steps</span>
+                <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-success);">{{ $completedStepsCount }} / 13</h4>
+            </div>
+            <div class="card" style="padding: var(--spacing-4); text-align: center;">
+                <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Pending Steps</span>
+                <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-text-muted);">{{ 13 - $completedStepsCount }}</h4>
+            </div>
+            <div class="card" style="padding: var(--spacing-4); text-align: center;">
+                <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Validation Score</span>
+                <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-primary);">{{ $payload['cal_overall_score'] ?? '0.00' }}%</h4>
+            </div>
+        </div>
+
+        <!-- Step Progress Checklist -->
+        <div class="card" style="padding: var(--spacing-6);">
+            <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Sourcing Steps Checklist</h3>
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
+                @php $stepNum = 1; @endphp
+                @foreach($stepTitles as $stepKey => $stepTitle)
+                    @php
+                        $isDone = $checklist[$stepTitle] ?? false;
+                        $itemClass = 'not-started';
+                        if ($isDone) {
+                            $itemClass = 'completed';
+                        } elseif ($currentStep == $stepKey) {
+                            $itemClass = 'in-progress';
+                        }
+                    @endphp
+                    <div class="checklist-item {{ $itemClass }}" onclick="switchMainTab('wizard'); jumpToStep({{ $stepKey }})">
+                        <div class="checklist-left">
+                            <div class="checklist-marker">
+                                @if($itemClass == 'completed')
+                                    ✓
+                                @elseif($itemClass == 'in-progress')
+                                    ●
+                                @else
+                                    ○
+                                @endif
+                            </div>
+                            <span class="checklist-name">Step {{ $stepNum }}: {{ $stepTitle }}</span>
+                        </div>
+                        <div>
                             @if($itemClass == 'completed')
-                                ✓
+                                <span class="badge badge-success">Completed</span>
                             @elseif($itemClass == 'in-progress')
-                                ●
+                                <span class="badge badge-primary" style="background-color: var(--color-primary-light); color: var(--color-primary);">Active</span>
                             @else
-                                ○
+                                <span class="badge" style="background-color: var(--color-bg-base); color: var(--color-text-muted); border: 1px solid var(--color-border)">Not Started</span>
                             @endif
                         </div>
-                        <span class="checklist-name">Step {{ $stepNum }}: {{ $stepTitle }}</span>
                     </div>
-                    <div>
-                        @if($itemClass == 'completed')
-                            <span class="badge badge-success">Completed</span>
-                        @elseif($itemClass == 'in-progress')
-                            <span class="badge badge-primary" style="background-color: var(--color-primary-light); color: var(--color-primary);">Active</span>
-                        @else
-                            <span class="badge" style="background-color: var(--color-bg-base); color: var(--color-text-muted); border: 1px solid var(--color-border)">Not Started</span>
-                        @endif
-                    </div>
+                    @php $stepNum++; @endphp
+                @endforeach
+            </div>
+        </div>
+    @endif
+</div>
+
+<!-- VIEW DETAILS MODAL -->
+<div id="view-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg-base); width: 95%; max-width: 850px; max-height: 90vh; border-radius: var(--radius-xl); padding: 0; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-alt);">
+            <div>
+                <h2 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin: 0;">Product Sourcing Summary</h2>
+                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary); margin: 4px 0 0 0;">Review all submitted details for this service.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('view-details-modal').style.display='none'" style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); cursor: pointer; color: var(--color-text-secondary); transition: all 0.2s ease;">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
+            
+            <!-- Step 1: Requirements -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">1</div>
+                    Product Requirements
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Product Category</div><div style="font-weight: var(--fw-medium);">{{ $payload['product_category'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Product Idea</div><div style="font-weight: var(--fw-medium);">{{ $payload['product_idea'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Est. Unit Cost</div><div style="font-weight: var(--fw-medium);">{{ $payload['est_unit_cost'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Est. Selling Price</div><div style="font-weight: var(--fw-medium);">{{ $payload['est_selling_price'] ?? 'N/A' }}</div></div>
                 </div>
-                @php $stepNum++; @endphp
-            @endforeach
+            </div>
+
+            <!-- Validation Score -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">6</div>
+                    Product Validation Score
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Overall Score</div><div style="font-weight: var(--fw-medium); font-size: var(--fs-lg); color: var(--color-primary);">{{ $payload['cal_overall_score'] ?? '0.00' }}%</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Validation Status</div><div><span class="badge {{ ($payload['validation_status'] ?? '') == 'Approved' ? 'badge-success' : 'badge-secondary' }}">{{ $payload['validation_status'] ?? 'N/A' }}</span></div></div>
+                </div>
+            </div>
+
+            <!-- Step 12: Manufacturing -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">12</div>
+                    Manufacturing / Sourcing
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Sourcing Agent</div><div style="font-weight: var(--fw-medium);">{{ $payload['mfg_agent'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Est. Time (Days)</div><div style="font-weight: var(--fw-medium);">{{ $payload['mfg_est_time'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Final Supplier</div><div style="font-weight: var(--fw-medium);">{{ $payload['mfg_supplier_name'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Status</div><div><span class="badge badge-primary">{{ $payload['mfg_status'] ?? 'N/A' }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Total Est Cost</div><div style="font-weight: var(--fw-medium);">{{ $payload['cal_total_sourcing_cost'] ?? '0' }}</div></div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: var(--spacing-4) var(--spacing-6); border-top: 1px solid var(--color-border); background: var(--color-bg-base); display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-details-modal').style.display='none'">Close</button>
         </div>
     </div>
 </div>
@@ -1618,6 +1713,45 @@
 
 @section('dashboard_scripts')
 <script>
+    let isEditMode = false;
+    let editModeStep = null;
+
+    function openViewModal() {
+        const modal = document.getElementById('view-details-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function startEditMode(stepNumber) {
+        isEditMode = true;
+        editModeStep = stepNumber;
+        switchMainTab('wizard');
+        jumpToStep(stepNumber);
+        
+        // Disable all other step navigations
+        for (let i = 1; i <= 13; i++) {
+            // Horizontal stepper items
+            const stepperItems = document.querySelectorAll('.stepper .step-item');
+            if (stepperItems.length >= i) {
+                const item = stepperItems[i-1];
+                if (i !== stepNumber) {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.4';
+                } else {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                }
+            }
+            
+            // Update submit button text to Save & Return
+            const formContainer = document.getElementById('step-form-container-' + i);
+            if (formContainer && i === stepNumber) {
+                const submitBtns = formContainer.querySelectorAll('button[type="submit"].btn-primary');
+                submitBtns.forEach(btn => btn.innerText = 'Save & Return');
+            }
+        }
+    }
     // Initialize Custom Multiselects
     document.addEventListener('DOMContentLoaded', function() {
         initCustomMultiselect('target_market_container');
@@ -1661,6 +1795,8 @@
 
     // Step navigation jump
     function jumpToStep(stepNumber) {
+        if (isEditMode && stepNumber !== editModeStep) return;
+
         for (let i = 1; i <= 13; i++) {
             const form = document.getElementById('step-form-container-' + i);
             if (form) {

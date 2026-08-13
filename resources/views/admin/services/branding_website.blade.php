@@ -64,12 +64,12 @@
 
 <!-- Tabs Navigation -->
 <div class="tabs-navigation" style="margin-bottom: 0;">
-    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
-    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+    <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Stepper</button>
+    <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
 
 <!-- TAB: STEPS WIZARD -->
-<div id="tab-content-wizard" class="tab-content active">
+<div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}">
 
 <!-- Dynamic Stepper -->
 <div class="stepper-container" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
@@ -706,61 +706,245 @@
 </div>{{-- /tab-content-wizard --}}
 
 <!-- TAB: OVERVIEW DASHBOARD -->
-<div id="tab-content-overview" class="tab-content" style="display:none;">
-    <div class="card" style="padding: var(--spacing-6);">
-        <h2 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: var(--spacing-1);">Branding & Website Overview</h2>
-        <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-6);">Summary of your branding, website and advertising setup progress.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
-            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
-                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Current Step</div>
-                <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-primary); margin-top: 4px;">{{ $currentStep }}/5</div>
-            </div>
-            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
-                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Status</div>
-                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin-top: 4px; text-transform: capitalize;">{{ str_replace('_', ' ', $status) }}</div>
-            </div>
-            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
-                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Branding</div>
-                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasBranding ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasBranding ? 'Selected' : 'Not Selected' }}</div>
-            </div>
-            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
-                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Website</div>
-                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasWebsite ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasWebsite ? 'Selected' : 'Not Selected' }}</div>
-            </div>
-            <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
-                <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Advertising</div>
-                <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasAdvertising ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasAdvertising ? 'Selected' : 'Not Selected' }}</div>
+<div id="tab-content-overview" class="tab-content {{ $status === 'completed' ? 'active' : '' }}">
+    
+    @if($status === 'completed')
+        <div class="card" style="padding: var(--spacing-4);">
+            <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Completed Service Details</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border);">
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Step Name</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Status</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $allStepsList = [
+                                1 => 'Service Selection',
+                                2 => 'Branding',
+                                3 => 'Website',
+                                4 => 'Advertising',
+                                5 => 'Final Review'
+                            ];
+                        @endphp
+                        @foreach($allStepsList as $stepNum => $stepTitle)
+                            @if($stepsVisible[$stepNum] ?? false)
+                                <tr style="border-bottom: 1px solid var(--color-border-light);">
+                                    <td style="padding: var(--spacing-3) var(--spacing-2); font-weight: var(--fw-medium); font-size: var(--fs-sm);">Step {{ $stepNum }}: {{ $stepTitle }}</td>
+                                    <td style="padding: var(--spacing-3) var(--spacing-2);"><span class="badge badge-success">Completed</span></td>
+                                    <td style="padding: var(--spacing-3) var(--spacing-2); text-align: right; white-space: nowrap;">
+                                        <button type="button" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; height: auto; margin-right: 4px;" onclick="openViewModal()">View</button>
+                                        <button type="button" class="btn btn-primary" style="font-size: 11px; padding: 4px 8px; height: auto;" onclick="startEditMode({{ $stepNum }})">Edit</button>
+                                    </td>
+                                </tr>
+                            @endif
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
+    @else
+        <div class="card" style="padding: var(--spacing-6);">
+            <h2 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: var(--spacing-1);">Branding & Website Overview</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-6);">Summary of your branding, website and advertising setup progress.</p>
 
-        @if(!empty($payload['brand_name']))
-        <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-            <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Brand Details</div>
-            <div><strong>Brand Name:</strong> {{ $payload['brand_name'] ?? '—' }}</div>
-            @if(!empty($payload['brand_slogan']))<div style="margin-top: 4px;"><strong>Slogan:</strong> {{ $payload['brand_slogan'] }}</div>@endif
-            @if(!empty($payload['preferred_style']))<div style="margin-top: 4px;"><strong>Style:</strong> {{ $payload['preferred_style'] }}</div>@endif
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+                <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                    <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Current Step</div>
+                    <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-primary); margin-top: 4px;">{{ $currentStep }}/5</div>
+                </div>
+                <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                    <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Status</div>
+                    <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin-top: 4px; text-transform: capitalize;">{{ str_replace('_', ' ', $status) }}</div>
+                </div>
+                <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                    <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Branding</div>
+                    <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasBranding ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasBranding ? 'Selected' : 'Not Selected' }}</div>
+                </div>
+                <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                    <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Website</div>
+                    <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasWebsite ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasWebsite ? 'Selected' : 'Not Selected' }}</div>
+                </div>
+                <div style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-4);">
+                    <div style="font-size: 10px; color: var(--color-text-secondary); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em;">Advertising</div>
+                    <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-top: 4px; color: {{ $hasAdvertising ? 'var(--color-success)' : 'var(--color-text-muted)' }};">{{ $hasAdvertising ? 'Selected' : 'Not Selected' }}</div>
+                </div>
+            </div>
+
+            @if(!empty($payload['brand_name']))
+            <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Brand Details</div>
+                <div><strong>Brand Name:</strong> {{ $payload['brand_name'] ?? '—' }}</div>
+                @if(!empty($payload['brand_slogan']))<div style="margin-top: 4px;"><strong>Slogan:</strong> {{ $payload['brand_slogan'] }}</div>@endif
+                @if(!empty($payload['preferred_style']))<div style="margin-top: 4px;"><strong>Style:</strong> {{ $payload['preferred_style'] }}</div>@endif
+            </div>
+            @endif
+
+            @if(!empty($payload['website_platform']))
+            <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Website Details</div>
+                <div><strong>Platform:</strong> {{ $payload['website_platform'] ?? '—' }}</div>
+                @if(!empty($payload['domain_name']))<div style="margin-top: 4px;"><strong>Domain:</strong> {{ $payload['domain_name'] }}</div>@endif
+                @if(!empty($payload['number_products']))<div style="margin-top: 4px;"><strong>Products:</strong> {{ $payload['number_products'] }}</div>@endif
+            </div>
+            @endif
+
+            <div style="text-align: center; margin-top: var(--spacing-4);">
+                <button class="btn btn-primary" onclick="switchMainTab('wizard')">Go to Setup Stepper</button>
+            </div>
         </div>
-        @endif
-
-        @if(!empty($payload['website_platform']))
-        <div style="margin-bottom: var(--spacing-4); padding: var(--spacing-4); background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-            <div style="font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-secondary); margin-bottom: var(--spacing-2);">Website Details</div>
-            <div><strong>Platform:</strong> {{ $payload['website_platform'] ?? '—' }}</div>
-            @if(!empty($payload['domain_name']))<div style="margin-top: 4px;"><strong>Domain:</strong> {{ $payload['domain_name'] }}</div>@endif
-            @if(!empty($payload['number_products']))<div style="margin-top: 4px;"><strong>Products:</strong> {{ $payload['number_products'] }}</div>@endif
+    @endif
+</div>{{-- /tab-content-overview --}}
+<!-- VIEW DETAILS MODAL -->
+<div id="view-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg-base); width: 95%; max-width: 850px; max-height: 90vh; border-radius: var(--radius-xl); padding: 0; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-alt);">
+            <div>
+                <h2 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin: 0;">Branding & Website Summary</h2>
+                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary); margin: 4px 0 0 0;">Review all submitted details for this service.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('view-details-modal').style.display='none'" style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); cursor: pointer; color: var(--color-text-secondary); transition: all 0.2s ease;">&times;</button>
         </div>
-        @endif
 
-        <div style="text-align: center; margin-top: var(--spacing-4);">
-            <button class="btn btn-primary" onclick="switchMainTab('wizard')">Go to Setup Stepper</button>
+        <!-- Modal Body -->
+        <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
+            
+            <!-- Step 1: Service Selection -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">1</div>
+                    Service Selection
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div>
+                        <div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Selected Services</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            @if(isset($payload['services']) && is_array($payload['services']))
+                                @foreach($payload['services'] as $svc)
+                                    <span class="badge badge-primary">{{ ucwords(str_replace('_', ' ', $svc)) }}</span>
+                                @endforeach
+                            @else
+                                <span class="badge badge-secondary">None</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Branding -->
+            @if($hasBranding)
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">2</div>
+                    Branding
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Brand Name</div><div style="font-weight: var(--fw-medium);">{{ $payload['brand_name'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Slogan</div><div style="font-weight: var(--fw-medium);">{{ $payload['brand_slogan'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Has Logo?</div><div><span class="badge {{ ($payload['has_logo'] ?? '') === 'yes' ? 'badge-success' : 'badge-secondary' }}">{{ ucfirst($payload['has_logo'] ?? 'N/A') }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Preferred Style</div><div style="font-weight: var(--fw-medium);">{{ $payload['preferred_style'] ?? 'N/A' }}</div></div>
+                    <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Brand Colors</div><div style="font-weight: var(--fw-medium);">{{ $payload['brand_colors'] ?? 'N/A' }}</div></div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Step 3: Website -->
+            @if($hasWebsite)
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">3</div>
+                    Website Development
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Has Domain?</div><div><span class="badge {{ ($payload['has_domain'] ?? '') === 'yes' ? 'badge-success' : 'badge-secondary' }}">{{ ucfirst($payload['has_domain'] ?? 'N/A') }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Domain Name</div><div style="font-weight: var(--fw-medium);">{{ $payload['domain_name'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Website Platform</div><div style="font-weight: var(--fw-medium);">{{ $payload['website_platform'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Number of Products</div><div style="font-weight: var(--fw-medium);">{{ $payload['number_products'] ?? 'N/A' }}</div></div>
+                    <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Reference Websites</div><div style="font-weight: var(--fw-medium);">{{ $payload['reference_websites'] ?? 'N/A' }}</div></div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Step 4: Advertising -->
+            @if($hasAdvertising)
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">4</div>
+                    Advertising
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Monthly Budget</div><div style="font-weight: var(--fw-medium);">{{ $payload['monthly_budget'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Primary Goal</div><div style="font-weight: var(--fw-medium);">{{ $payload['primary_goal'] ?? 'N/A' }}</div></div>
+                    <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Target Audience</div><div style="font-weight: var(--fw-medium);">{{ $payload['target_audience'] ?? 'N/A' }}</div></div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Step 5: Final Review -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">5</div>
+                    Additional Notes
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Additional Info</div><div style="font-weight: var(--fw-medium); line-height: 1.5;">{{ $payload['additional_notes'] ?? 'None provided.' }}</div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: var(--spacing-4) var(--spacing-6); border-top: 1px solid var(--color-border); background: var(--color-bg-base); display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-details-modal').style.display='none'">Close</button>
         </div>
     </div>
-</div>{{-- /tab-content-overview --}}
+</div>
+
 @endsection
 
 @section('dashboard_scripts')
 <script>
+    let isEditMode = false;
+    let editModeStep = null;
+
+    function openViewModal() {
+        const modal = document.getElementById('view-details-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function startEditMode(stepNumber) {
+        isEditMode = true;
+        editModeStep = stepNumber;
+        switchMainTab('wizard');
+        jumpToStep(stepNumber);
+        
+        // Disable all other step navigations
+        for (let i = 1; i <= 5; i++) {
+            const item = document.getElementById('step-nav-' + i);
+            if (item) {
+                if (i !== stepNumber) {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.4';
+                } else {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                }
+            }
+            // Update submit button text to Save & Return
+            const formContainer = document.getElementById('step-form-container-' + i);
+            if (formContainer && i === stepNumber) {
+                const submitBtns = formContainer.querySelectorAll('button[type="submit"].btn-primary');
+                submitBtns.forEach(btn => btn.innerText = 'Save & Return');
+            }
+        }
+    }
+
     // Visibility Map of steps
     const stepsVisible = @json($stepsVisible);
 
@@ -795,9 +979,11 @@
         }
     }
 
-    // Navigation jumps
+    // Step switching within Wizard
     function jumpToStep(stepNumber) {
-        // Only allow switching to active or configured steps
+        if (isEditMode && stepNumber !== editModeStep) return;
+        
+        // Ensure requested step is visible based on conditional logic
         for (let i = 1; i <= 5; i++) {
             const form = document.getElementById('step-form-container-' + i);
             if (form) {

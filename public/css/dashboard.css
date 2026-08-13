@@ -618,3 +618,35 @@
     }
 }
 
+
+
+/* Mobile Navbar Responsive Fixes */
+@media (max-width: 768px) {
+    .top-navbar {
+        padding: 0 var(--spacing-4);
+        flex-wrap: wrap;
+        height: auto;
+        min-height: var(--header-height);
+        padding-top: var(--spacing-2);
+        padding-bottom: var(--spacing-2);
+    }
+    .navbar-left, .navbar-right {
+        gap: var(--spacing-2);
+    }
+    .user-profile .user-info {
+        display: none !important;
+    }
+    .user-role {
+        display: none !important;
+    }
+    .company-selector {
+        margin-left: 0 !important;
+    }
+    #company-dropdown-btn span {
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+

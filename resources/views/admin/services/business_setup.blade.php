@@ -9,11 +9,43 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0;">
+<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
     <a href="{{ route('admin.dashboard') }}">Console</a>
+    <span>/</span>
     <a href="{{ route('services.index') }}">Services</a>
+    <span>/</span>
     <span>Business Setup & Compliance</span>
 </nav>
+
+@php
+    $docs = $payload['documents'] ?? [];
+    $hasRequiredDocs = !empty($docs['articles_of_organization']) && !empty($docs['operating_agreement']) && !empty($docs['ein_letter']);
+    
+    $completedStepsCount = 0;
+    $totalStepsCount = 7;
+    
+    $checklist = [
+        'Business Information' => !empty($payload['business_name']),
+        'LLC Formation' => !empty($payload['has_llc']),
+        'EIN' => !empty($payload['has_ein']),
+        'Business Documents' => $hasRequiredDocs,
+        'Business Banking' => !empty($payload['has_bank']),
+        'Tax & Compliance' => !empty($payload['tax_status']),
+        'Business Structure' => !empty($payload['business_model']),
+    ];
+
+    foreach($checklist as $stepTitle => $isDone) {
+        if ($isDone) $completedStepsCount++;
+    }
+
+    $percentage = round(($completedStepsCount / $totalStepsCount) * 100);
+    
+    // Count missing docs
+    $missingDocs = 0;
+    if (empty($docs['articles_of_organization'])) $missingDocs++;
+    if (empty($docs['operating_agreement'])) $missingDocs++;
+    if (empty($docs['ein_letter'])) $missingDocs++;
+@endphp
 
 <!-- Success / Error Messages -->
 @if(session('success'))
@@ -34,16 +66,26 @@
 
 <!-- Tabs Navigation -->
 <div class="tabs-navigation" style="margin-bottom: 0;">
-    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
-    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+    <button class="tab-btn {{ $percentage < 100 ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $percentage == 100 ? 'display: none;' : '' }}">Setup Stepper</button>
+    <button class="tab-btn {{ $percentage == 100 ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $percentage < 100 ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
 
 <!-- STEPS WIZARD -->
-<div id="tab-content-wizard" class="tab-content active">
+<div id="tab-content-wizard" class="tab-content {{ $percentage < 100 ? 'active' : '' }}">
 
     <!-- Stepper Navigation -->
-    <div class="stepper-container" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
-        <ol class="stepper">
+    <div class="stepper-container" id="stepper-container-div" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3); position: relative;">
+        <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-150)" id="stepper-left-btn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </button>
+        <button type="button" class="stepper-scroll-btn scroll-right" onclick="scrollStepper(150)" id="stepper-right-btn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+        <ol class="stepper" id="stepper-list">
             <!-- Step 1 -->
             <li class="step-item {{ $currentStep == 1 ? 'in-progress' : ($currentStep > 1 ? 'completed' : 'not-started') }}" id="step-nav-1" onclick="jumpToStep(1)">
                 <div class="step-circle">01</div>
@@ -71,8 +113,6 @@
             <!-- Step 4 -->
             <!-- We flag Step 4 as Action Required if any required files are missing and currentStep >= 4 -->
             @php
-                $docs = $payload['documents'] ?? [];
-                $hasRequiredDocs = !empty($docs['articles_of_organization']) && !empty($docs['operating_agreement']) && !empty($docs['ein_letter']);
                 $step4Class = 'not-started';
                 if ($currentStep == 4) {
                     $step4Class = $hasRequiredDocs ? 'in-progress' : 'action-required';
@@ -129,7 +169,7 @@
 
                 <div style="display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: var(--spacing-5);">
                     <!-- 2-column layout on desktop -->
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+                    <div class="form-grid-2">
                         <div class="form-group">
                             <label for="business_name" class="form-label">Business Name <span style="color: var(--color-danger);">*</span></label>
                             <input type="text" name="business_name" id="business_name" class="form-control" value="{{ old('business_name', $payload['business_name'] ?? '') }}" required>
@@ -153,7 +193,7 @@
                         <textarea name="business_activity" id="business_activity" rows="4" class="form-control" style="height: auto;" required>{{ old('business_activity', $payload['business_activity'] ?? '') }}</textarea>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+                    <div class="form-grid-2">
                         <div class="form-group">
                             <label for="website_url" class="form-label">Website URL <span style="color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
                             <input type="url" name="website_url" id="website_url" class="form-control" placeholder="https://example.com" value="{{ old('website_url', $payload['website_url'] ?? '') }}">
@@ -164,7 +204,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+                    <div class="form-grid-2">
                         <div class="form-group">
                             <label for="business_phone" class="form-label">Business Phone <span style="color: var(--color-danger);">*</span></label>
                             <input type="text" name="business_phone" id="business_phone" class="form-control" placeholder="+1 (555) 000-0000" value="{{ old('business_phone', $payload['business_phone'] ?? '') }}" required>
@@ -274,7 +314,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group" id="ein-number-container" style="display: {{ $hasEin == 'yes' ? 'block' : 'none' }};">
                         <label for="ein_number" class="form-label">EIN Number <span style="color: var(--color-danger);">*</span></label>
                         <input type="text" name="ein_number" id="ein_number" class="form-control" placeholder="12-3456789" value="{{ old('ein_number', $payload['ein_number'] ?? '') }}">
@@ -426,7 +466,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="banking_type" class="form-label">Preferred Banking Type <span style="color: var(--color-danger);">*</span></label>
                         <select name="banking_type" id="banking_type" class="form-control" required>
@@ -440,7 +480,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="bank_status" class="form-label">Bank Account Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="bank_status" id="bank_status" class="form-control" required>
@@ -480,7 +520,7 @@
                 <input type="hidden" name="step" value="6">
                 <input type="hidden" name="action" id="step-6-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="tax_status" class="form-label">Tax Filing Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="tax_status" id="tax_status" class="form-control" required>
@@ -505,7 +545,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="annual_report_status" class="form-label">Annual Report Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="annual_report_status" id="annual_report_status" class="form-control" required>
@@ -550,7 +590,7 @@
                 <input type="hidden" name="step" value="7">
                 <input type="hidden" name="action" id="step-7-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="business_model" class="form-label">Business Model <span style="color: var(--color-danger);">*</span></label>
                         <select name="business_model" id="business_model" class="form-control" required>
@@ -666,35 +706,7 @@
 </div>
 
 <!-- TAB 2: OVERVIEW DASHBOARD -->
-<div id="tab-content-overview" class="tab-content">
-    
-    <!-- Calculations for statistics -->
-    @php
-        $completedStepsCount = 0;
-        $totalStepsCount = 7;
-        
-        $checklist = [
-            'Business Information' => !empty($payload['business_name']),
-            'LLC Formation' => !empty($payload['has_llc']),
-            'EIN' => !empty($payload['has_ein']),
-            'Business Documents' => $hasRequiredDocs,
-            'Business Banking' => !empty($payload['has_bank']),
-            'Tax & Compliance' => !empty($payload['tax_status']),
-            'Business Structure' => !empty($payload['business_model']),
-        ];
-
-        foreach($checklist as $stepTitle => $isDone) {
-            if ($isDone) $completedStepsCount++;
-        }
-
-        $percentage = round(($completedStepsCount / $totalStepsCount) * 100);
-        
-        // Count missing docs
-        $missingDocs = 0;
-        if (empty($docs['articles_of_organization'])) $missingDocs++;
-        if (empty($docs['operating_agreement'])) $missingDocs++;
-        if (empty($docs['ein_letter'])) $missingDocs++;
-    @endphp
+<div id="tab-content-overview" class="tab-content {{ $percentage == 100 ? 'active' : '' }}">
 
     <div class="progress-banner">
         <div class="progress-banner-header">
@@ -735,54 +747,85 @@
 
     <div class="overview-grid">
         <div class="grid-col-span-2">
-            <div class="checklist-card">
-                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Setup Checklist</h3>
-                
-                @php $stepNum = 1; @endphp
-                @foreach($checklist as $stepTitle => $isDone)
-                    @php
-                        // Determine step sub-state/color classes
-                        $itemClass = 'not-started';
-                        if ($isDone) {
-                            $itemClass = 'completed';
-                        } else {
-                            if ($stepNum == 4 && !$hasRequiredDocs) {
-                                $itemClass = 'action-required';
-                            } elseif ($currentStep == $stepNum) {
-                                $itemClass = 'in-progress';
+            @if($percentage == 100)
+                <div class="card" style="padding: var(--spacing-4);">
+                    <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Completed Service Details</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--color-border);">
+                                    <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Step Name</th>
+                                    <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Status</th>
+                                    <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm); text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $stepNum = 1; @endphp
+                                @foreach($checklist as $stepTitle => $isDone)
+                                    <tr style="border-bottom: 1px solid var(--color-border-light);">
+                                        <td style="padding: var(--spacing-3) var(--spacing-2); font-weight: var(--fw-medium); font-size: var(--fs-sm);">Step {{ $stepNum }}: {{ $stepTitle }}</td>
+                                        <td style="padding: var(--spacing-3) var(--spacing-2);"><span class="badge badge-success">Completed</span></td>
+                                        <td style="padding: var(--spacing-3) var(--spacing-2); text-align: right; white-space: nowrap;">
+                                            <button type="button" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; height: auto; margin-right: 4px;" onclick="openViewModal()">View</button>
+                                            <button type="button" class="btn btn-primary" style="font-size: 11px; padding: 4px 8px; height: auto;" onclick="startEditMode({{ $stepNum }})">Edit</button>
+                                        </td>
+                                    </tr>
+                                    @php $stepNum++; @endphp
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @else
+                <div class="checklist-card">
+                    <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Setup Checklist</h3>
+                    
+                    @php $stepNum = 1; @endphp
+                    @foreach($checklist as $stepTitle => $isDone)
+                        @php
+                            // Determine step sub-state/color classes
+                            $itemClass = 'not-started';
+                            if ($isDone) {
+                                $itemClass = 'completed';
+                            } else {
+                                if ($stepNum == 4 && !$hasRequiredDocs) {
+                                    $itemClass = 'action-required';
+                                } elseif ($currentStep == $stepNum) {
+                                    $itemClass = 'in-progress';
+                                }
                             }
-                        }
-                    @endphp
-                    <div class="checklist-item {{ $itemClass }}" onclick="switchMainTab('wizard'); jumpToStep({{ $stepNum }})">
-                        <div class="checklist-left">
-                            <div class="checklist-marker">
+                        @endphp
+                        <div class="checklist-item {{ $itemClass }}" onclick="switchMainTab('wizard'); jumpToStep({{ $stepNum }})">
+                            <div class="checklist-left">
+                                <div class="checklist-marker">
+                                    @if($itemClass == 'completed')
+                                        ✓
+                                    @elseif($itemClass == 'in-progress')
+                                        ●
+                                    @elseif($itemClass == 'action-required')
+                                        ⚠
+                                    @else
+                                        ○
+                                    @endif
+                                </div>
+                                <span class="checklist-name">Step {{ $stepNum }}: {{ $stepTitle }}</span>
+                            </div>
+                            <div>
                                 @if($itemClass == 'completed')
-                                    ✓
+                                    <span class="badge badge-success">Completed</span>
                                 @elseif($itemClass == 'in-progress')
-                                    ●
+                                    <span class="badge badge-primary" style="background-color: var(--color-primary-light); color: var(--color-primary);">In Progress</span>
                                 @elseif($itemClass == 'action-required')
-                                    ⚠
+                                    <span class="badge badge-danger">Action Required</span>
                                 @else
-                                    ○
+                                    <span class="badge" style="background-color: var(--color-bg-base); color: var(--color-text-muted); border: 1px solid var(--color-border)">Not Started</span>
                                 @endif
                             </div>
-                            <span class="checklist-name">Step {{ $stepNum }}: {{ $stepTitle }}</span>
                         </div>
-                        <div>
-                            @if($itemClass == 'completed')
-                                <span class="badge badge-success">Completed</span>
-                            @elseif($itemClass == 'in-progress')
-                                <span class="badge badge-primary" style="background-color: var(--color-primary-light); color: var(--color-primary);">In Progress</span>
-                            @elseif($itemClass == 'action-required')
-                                <span class="badge badge-danger">Action Required</span>
-                            @else
-                                <span class="badge" style="background-color: var(--color-bg-base); color: var(--color-text-muted); border: 1px solid var(--color-border)">Not Started</span>
-                            @endif
-                        </div>
-                    </div>
-                    @php $stepNum++; @endphp
-                @endforeach
-            </div>
+                        @php $stepNum++; @endphp
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         <div>
@@ -805,10 +848,182 @@
     </div>
 
 </div>
+
+<!-- VIEW DETAILS MODAL -->
+<div id="view-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg-base); width: 95%; max-width: 850px; max-height: 90vh; border-radius: var(--radius-xl); padding: 0; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-alt);">
+            <div>
+                <h2 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin: 0;">Business Setup Summary</h2>
+                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary); margin: 4px 0 0 0;">Review all submitted details for this service.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('view-details-modal').style.display='none'" style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); cursor: pointer; color: var(--color-text-secondary); transition: all 0.2s ease;">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
+            
+            <!-- Step 1 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">1</div>
+                    Business Information
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Name</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_name'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Type</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_type'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Email</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_email'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Phone</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_phone'] ?? 'N/A' }}</div></div>
+                    <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Activity</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_activity'] ?? 'N/A' }}</div></div>
+                </div>
+            </div>
+
+            <!-- Step 2 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">2</div>
+                    LLC Formation
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Has LLC?</div><div><span class="badge {{ ($payload['has_llc'] ?? '') === 'yes' ? 'badge-success' : 'badge-secondary' }}">{{ ucfirst($payload['has_llc'] ?? 'N/A') }}</span></div></div>
+                    @if(($payload['has_llc'] ?? '') === 'yes')
+                        <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">LLC Name</div><div style="font-weight: var(--fw-medium);">{{ $payload['llc_name'] ?? 'N/A' }}</div></div>
+                        <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Formation Date</div><div style="font-weight: var(--fw-medium);">{{ $payload['formation_date'] ?? 'N/A' }}</div></div>
+                    @else
+                        <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Preferred State</div><div style="font-weight: var(--fw-medium);">{{ $payload['preferred_state'] ?? 'N/A' }}</div></div>
+                        <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Proposed Name</div><div style="font-weight: var(--fw-medium);">{{ $payload['proposed_llc_name'] ?? 'N/A' }}</div></div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Step 3 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">3</div>
+                    EIN
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Has EIN?</div><div><span class="badge {{ ($payload['has_ein'] ?? '') === 'yes' ? 'badge-success' : 'badge-secondary' }}">{{ ucfirst($payload['has_ein'] ?? 'N/A') }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">EIN Status</div><div><span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border);">{{ $payload['ein_status'] ?? 'N/A' }}</span></div></div>
+                    @if(($payload['has_ein'] ?? '') === 'yes')
+                        <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">EIN Number</div><div style="font-weight: var(--fw-medium);">{{ $payload['ein_number'] ?? 'N/A' }}</div></div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Step 4 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">4</div>
+                    Business Documents
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #fff; border: 1px solid var(--color-border-light); border-radius: var(--radius-md);">
+                        <span style="font-weight: var(--fw-medium); color: var(--color-text-secondary);">Articles of Organization</span>
+                        <span class="badge {{ !empty($docs['articles_of_organization']) ? 'badge-success' : 'badge-danger' }}">{{ !empty($docs['articles_of_organization']) ? 'Uploaded' : 'Missing' }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #fff; border: 1px solid var(--color-border-light); border-radius: var(--radius-md);">
+                        <span style="font-weight: var(--fw-medium); color: var(--color-text-secondary);">Operating Agreement</span>
+                        <span class="badge {{ !empty($docs['operating_agreement']) ? 'badge-success' : 'badge-danger' }}">{{ !empty($docs['operating_agreement']) ? 'Uploaded' : 'Missing' }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #fff; border: 1px solid var(--color-border-light); border-radius: var(--radius-md);">
+                        <span style="font-weight: var(--fw-medium); color: var(--color-text-secondary);">EIN Letter</span>
+                        <span class="badge {{ !empty($docs['ein_letter']) ? 'badge-success' : 'badge-danger' }}">{{ !empty($docs['ein_letter']) ? 'Uploaded' : 'Missing' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">5</div>
+                    Business Banking
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Has US Bank Account?</div><div><span class="badge {{ ($payload['has_bank'] ?? '') === 'yes' ? 'badge-success' : 'badge-secondary' }}">{{ ucfirst($payload['has_bank'] ?? 'N/A') }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Banking Type</div><div style="font-weight: var(--fw-medium);">{{ $payload['banking_type'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Preferred Bank</div><div style="font-weight: var(--fw-medium);">{{ $payload['preferred_bank'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Bank Status</div><div><span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border);">{{ $payload['bank_status'] ?? 'N/A' }}</span></div></div>
+                </div>
+            </div>
+
+            <!-- Step 6 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">6</div>
+                    Tax & Compliance
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Tax Filing Status</div><div><span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border);">{{ $payload['tax_status'] ?? 'N/A' }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Tax Professional Required?</div><div><span class="badge {{ ($payload['tax_professional'] ?? '') === 'yes' ? 'badge-primary' : 'badge-secondary' }}">{{ ucfirst($payload['tax_professional'] ?? 'N/A') }}</span></div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Annual Report Status</div><div><span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border);">{{ $payload['annual_report_status'] ?? 'N/A' }}</span></div></div>
+                </div>
+            </div>
+
+            <!-- Step 7 Info -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">7</div>
+                    Business Structure
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Business Model</div><div style="font-weight: var(--fw-medium);">{{ $payload['business_model'] ?? 'N/A' }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Sales Channels</div><div style="font-weight: var(--fw-medium);">{{ isset($payload['sales_channels']) && is_array($payload['sales_channels']) ? implode(', ', $payload['sales_channels']) : 'N/A' }}</div></div>
+                    <div style="grid-column: 1 / -1;"><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Target States</div><div style="font-weight: var(--fw-medium); line-height: 1.4;">{{ isset($payload['target_states']) && is_array($payload['target_states']) ? implode(', ', $payload['target_states']) : 'N/A' }}</div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: var(--spacing-4) var(--spacing-6); border-top: 1px solid var(--color-border); background: var(--color-bg-base); display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-details-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
-@section('dashboard_scripts')
+@section('scripts')
 <script>
+    let isEditMode = false;
+    let editModeStep = null;
+
+    function openViewModal() {
+        const modal = document.getElementById('view-details-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function startEditMode(stepNumber) {
+        isEditMode = true;
+        editModeStep = stepNumber;
+        switchMainTab('wizard');
+        jumpToStep(stepNumber);
+        
+        // Disable all other step navigations
+        for (let i = 1; i <= 7; i++) {
+            const item = document.getElementById('step-nav-' + i);
+            if (item) {
+                if (i !== stepNumber) {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.4';
+                } else {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                }
+            }
+            // Update submit button text to Save & Return
+            const formContainer = document.getElementById('step-form-container-' + i);
+            if (formContainer && i === stepNumber) {
+                const submitBtns = formContainer.querySelectorAll('button[type="submit"].btn-primary');
+                submitBtns.forEach(btn => btn.innerText = 'Save & Return');
+            }
+        }
+    }
+
     // Tab switching (Wizard Stepper vs Overview Dashboard)
     function switchMainTab(tab) {
         const wizardBtn = document.getElementById('tab-btn-wizard');
@@ -831,6 +1046,8 @@
 
     // Step switching within Wizard
     function jumpToStep(stepNumber) {
+        if (isEditMode && stepNumber !== editModeStep) return;
+        
         // Toggle step forms visibility
         for (let i = 1; i <= 7; i++) {
             const form = document.getElementById('step-form-container-' + i);
@@ -905,6 +1122,30 @@
     }
 
     // Initialize conditional fields based on default/previous database choices
+    // Scroll stepper horizontally
+    function scrollStepper(amount) {
+        const container = document.getElementById('stepper-container-div');
+        if (container) {
+            container.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+    }
+
+    function updateStepperScrollButtons() {
+        const container = document.getElementById('stepper-container-div');
+        const leftBtn = document.getElementById('stepper-left-btn');
+        const rightBtn = document.getElementById('stepper-right-btn');
+        
+        if (!container || !leftBtn || !rightBtn) return;
+
+        if (container.scrollWidth > container.clientWidth) {
+            leftBtn.style.display = container.scrollLeft > 0 ? 'flex' : 'none';
+            rightBtn.style.display = Math.ceil(container.scrollLeft + container.clientWidth) < container.scrollWidth ? 'flex' : 'none';
+        } else {
+            leftBtn.style.display = 'none';
+            rightBtn.style.display = 'none';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const selectedLlcRadio = document.querySelector('input[name="has_llc"]:checked');
         if (selectedLlcRadio) {
@@ -918,6 +1159,14 @@
 
         // Initialize custom multi-select
         initCustomMultiselect('target_states_container');
+
+        // Initialize scroll buttons
+        const container = document.getElementById('stepper-container-div');
+        if (container) {
+            container.addEventListener('scroll', updateStepperScrollButtons);
+            window.addEventListener('resize', updateStepperScrollButtons);
+            setTimeout(updateStepperScrollButtons, 100);
+        }
     });
 </script>
 @endsection
