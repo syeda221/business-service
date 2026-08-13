@@ -229,51 +229,149 @@
 
 <!-- Tabs Navigation -->
 <div class="tabs-navigation" style="margin-bottom: 0;">
-    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
-    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+    <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Stepper</button>
+    <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
 
 <!-- TAB: OVERVIEW DASHBOARD -->
-<div id="tab-content-overview" class="tab-content" style="display:none;">
-<!-- SERVICE OVERVIEW PANEL -->
-<div class="stats-panel-row" style="margin-top: var(--spacing-3);">
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Warehouses</span>
-        <span class="stat-card-value">{{ $warehouseCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Incoming Shipments</span>
-        <span class="stat-card-value">{{ $incomingShipmentsCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Inventory SKU Items</span>
-        <span class="stat-card-value">{{ $inventoryItemsCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Pending Orders</span>
-        <span class="stat-card-value">{{ $pendingOrdersCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">In Fulfillment</span>
-        <span class="stat-card-value">{{ $ordersInFulfillmentCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Total Shipments</span>
-        <span class="stat-card-value">{{ $shipmentsCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Completed Deliveries</span>
-        <span class="stat-card-value">{{ $deliveriesCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Returns Handled</span>
-        <span class="stat-card-value">{{ $returnsCount }}</span>
-    </div>
-</div>{{-- /stats-panel-row --}}
+<div id="tab-content-overview" class="tab-content" style="{{ $status === 'completed' ? 'display:block;' : 'display:none;' }}">
+    @if($status === 'completed')
+        <div class="card" style="padding: var(--spacing-4);">
+            <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Completed Service Details</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border);">
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Step Name</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Status</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stepTitles as $stepNum => $stepTitle)
+                            <tr style="border-bottom: 1px solid var(--color-border-light);">
+                                <td style="padding: var(--spacing-3) var(--spacing-2); font-weight: var(--fw-medium); font-size: var(--fs-sm);">Step {{ $stepNum }}: {{ $stepTitle }}</td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2);"><span class="badge badge-success">Completed</span></td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2); text-align: right; white-space: nowrap;">
+                                    <button type="button" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; height: auto; margin-right: 4px;" onclick="openViewModal()">View</button>
+                                    <button type="button" class="btn btn-primary" style="font-size: 11px; padding: 4px 8px; height: auto;" onclick="startEditMode({{ $stepNum }})">Edit</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @else
+        <!-- SERVICE OVERVIEW PANEL -->
+        <div class="stats-panel-row" style="margin-top: var(--spacing-3);">
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Warehouses</span>
+                <span class="stat-card-value">{{ $warehouseCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Incoming Shipments</span>
+                <span class="stat-card-value">{{ $incomingShipmentsCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Inventory SKU Items</span>
+                <span class="stat-card-value">{{ $inventoryItemsCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Pending Orders</span>
+                <span class="stat-card-value">{{ $pendingOrdersCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Orders In-Fulfillment</span>
+                <span class="stat-card-value">{{ $ordersInFulfillmentCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Deliveries Sent</span>
+                <span class="stat-card-value">{{ $deliveriesCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Returns Handled</span>
+                <span class="stat-card-value">{{ $returnsCount }}</span>
+            </div>
+        </div>{{-- /stats-panel-row --}}
+    @endif
 </div>{{-- /tab-content-overview --}}
 
+<!-- VIEW DETAILS MODAL -->
+<div id="view-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg-base); width: 95%; max-width: 850px; max-height: 90vh; border-radius: var(--radius-xl); padding: 0; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-alt);">
+            <div>
+                <h2 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin: 0;">Fulfillment & Logistics Summary</h2>
+                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary); margin: 4px 0 0 0;">Review all submitted details for this service.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('view-details-modal').style.display='none'" style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); cursor: pointer; color: var(--color-text-secondary); transition: all 0.2s ease;">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
+            
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+                <!-- Stat Card 1 -->
+                <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div style="width: 48px; height: 48px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                    </div>
+                    <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary);">{{ $inventoryItemsCount }}</div>
+                    <div style="font-size: var(--fs-sm); color: var(--color-text-secondary); font-weight: var(--fw-medium); margin-top: 4px;">Inventory SKUs Tracked</div>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div style="width: 48px; height: 48px; background: var(--color-success-light); color: var(--color-success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                        </svg>
+                    </div>
+                    <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary);">{{ $deliveriesCount }}</div>
+                    <div style="font-size: var(--fs-sm); color: var(--color-text-secondary); font-weight: var(--fw-medium); margin-top: 4px;">Deliveries Completed</div>
+                </div>
+            </div>
+
+            <!-- Operations Overview -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 14px; height: 14px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                        </svg>
+                    </div>
+                    Operations Overview
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Service Types</div>
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                            @foreach($serviceTypes as $type)
+                                <span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border); font-size: 10px;">{{ $type }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Active Warehouses</div><div style="font-weight: var(--fw-medium);">{{ $warehouseCount }} Locations</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Pending Orders</div><div style="font-weight: var(--fw-medium);">{{ $pendingOrdersCount }}</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Returns Handled</div><div style="font-weight: var(--fw-medium);">{{ $returnsCount }}</div></div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: var(--spacing-4) var(--spacing-6); border-top: 1px solid var(--color-border); background: var(--color-bg-base); display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-details-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- TAB: SETUP WIZARD -->
-<div id="tab-content-wizard" class="tab-content active">
+<div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}" style="{{ $status === 'completed' ? 'display:none;' : 'display:block;' }}">
 
 <!-- Dynamic Stepper -->
 <div style="position: relative; width: 100%; margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
@@ -3330,8 +3428,50 @@
         }
     }
 
+    let isEditMode = false;
+    let editModeStep = null;
+
+    function openViewModal() {
+        const modal = document.getElementById('view-details-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function startEditMode(stepNumber) {
+        isEditMode = true;
+        editModeStep = stepNumber;
+        switchMainTab('wizard');
+        jumpToStep(stepNumber);
+        
+        // Disable all other step navigations
+        for (let i = 1; i <= 16; i++) {
+            // Horizontal stepper items
+            const stepperItems = document.querySelectorAll('.stepper .step-item');
+            if (stepperItems.length >= i) {
+                const item = stepperItems[i-1];
+                if (i !== stepNumber) {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.4';
+                } else {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                }
+            }
+            
+            // Update submit button text to Save & Return
+            const formContainer = document.getElementById('step-form-container-' + i);
+            if (formContainer && i === stepNumber) {
+                const submitBtns = formContainer.querySelectorAll('button[type="submit"].btn-primary');
+                submitBtns.forEach(btn => btn.innerText = 'Save & Return');
+            }
+        }
+    }
+
     // Stepper jump to specific step
     function jumpToStep(stepNumber) {
+        if (isEditMode && stepNumber !== editModeStep) return;
+
         for (let i = 1; i <= 16; i++) {
             const form = document.getElementById('step-form-container-' + i);
             if (form) {

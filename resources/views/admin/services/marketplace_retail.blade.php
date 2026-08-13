@@ -202,47 +202,144 @@
 
 <!-- Tabs Navigation -->
 <div class="tabs-navigation" style="margin-bottom: 0;">
-    <button class="tab-btn active" id="tab-btn-wizard" onclick="switchMainTab('wizard')">Setup Stepper</button>
-    <button class="tab-btn" id="tab-btn-overview" onclick="switchMainTab('overview')">Overview Dashboard</button>
+    <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Stepper</button>
+    <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
 
 <!-- TAB: OVERVIEW DASHBOARD -->
-<div id="tab-content-overview" class="tab-content" style="display:none;">
-<!-- SERVICE OVERVIEW PANEL -->
-<div class="stats-panel-row" style="margin-top: var(--spacing-3);">
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Selected Markets</span>
-        <span class="stat-card-value">{{ count($selectedMarketplaces) }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Active Accounts</span>
-        <span class="stat-card-value">{{ $activeAccountsCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Products Catalog</span>
-        <span class="stat-card-value">{{ count($products) }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Active Listings</span>
-        <span class="stat-card-value">{{ $activeListingsCount }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Inventory Items</span>
-        <span class="stat-card-value">{{ count($inventories) }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Orders</span>
-        <span class="stat-card-value">{{ count($orders) }}</span>
-    </div>
-    <div class="stat-card-mini">
-        <span class="stat-card-title">Retail Prospects</span>
-        <span class="stat-card-value">{{ $retailProspectsCount }}</span>
-    </div>
-</div>{{-- /stats-panel-row --}}
+<div id="tab-content-overview" class="tab-content" style="{{ $status === 'completed' ? 'display:block;' : 'display:none;' }}">
+    @if($status === 'completed')
+        <div class="card" style="padding: var(--spacing-4);">
+            <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Completed Service Details</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border);">
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Step Name</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm);">Status</th>
+                            <th style="padding: var(--spacing-3) var(--spacing-2); color: var(--color-text-secondary); font-weight: var(--fw-semibold); font-size: var(--fs-sm); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stepTitles as $stepNum => $stepTitle)
+                            <tr style="border-bottom: 1px solid var(--color-border-light);">
+                                <td style="padding: var(--spacing-3) var(--spacing-2); font-weight: var(--fw-medium); font-size: var(--fs-sm);">Step {{ $stepNum }}: {{ $stepTitle }}</td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2);"><span class="badge badge-success">Completed</span></td>
+                                <td style="padding: var(--spacing-3) var(--spacing-2); text-align: right; white-space: nowrap;">
+                                    <button type="button" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; height: auto; margin-right: 4px;" onclick="openViewModal()">View</button>
+                                    <button type="button" class="btn btn-primary" style="font-size: 11px; padding: 4px 8px; height: auto;" onclick="startEditMode({{ $stepNum }})">Edit</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @else
+        <!-- SERVICE OVERVIEW PANEL -->
+        <div class="stats-panel-row" style="margin-top: var(--spacing-3);">
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Selected Markets</span>
+                <span class="stat-card-value">{{ count($selectedMarketplaces) }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Active Accounts</span>
+                <span class="stat-card-value">{{ $activeAccountsCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Products Catalog</span>
+                <span class="stat-card-value">{{ count($products) }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Active Listings</span>
+                <span class="stat-card-value">{{ $activeListingsCount }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Inventory Items</span>
+                <span class="stat-card-value">{{ count($inventories) }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Orders</span>
+                <span class="stat-card-value">{{ count($orders) }}</span>
+            </div>
+            <div class="stat-card-mini">
+                <span class="stat-card-title">Retail Prospects</span>
+                <span class="stat-card-value">{{ $retailProspectsCount }}</span>
+            </div>
+        </div>{{-- /stats-panel-row --}}
+    @endif
 </div>{{-- /tab-content-overview --}}
 
+<!-- VIEW DETAILS MODAL -->
+<div id="view-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg-base); width: 95%; max-width: 850px; max-height: 90vh; border-radius: var(--radius-xl); padding: 0; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-alt);">
+            <div>
+                <h2 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary); margin: 0;">Marketplace & Retail Summary</h2>
+                <p style="font-size: var(--fs-sm); color: var(--color-text-secondary); margin: 4px 0 0 0;">Review all submitted details for this service.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('view-details-modal').style.display='none'" style="background: var(--color-bg-base); border: 1px solid var(--color-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-lg); cursor: pointer; color: var(--color-text-secondary); transition: all 0.2s ease;">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
+            
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+                <!-- Stat Card 1 -->
+                <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div style="width: 48px; height: 48px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary);">{{ count($selectedMarketplaces) }}</div>
+                    <div style="font-size: var(--fs-sm); color: var(--color-text-secondary); font-weight: var(--fw-medium); margin-top: 4px;">Marketplaces Selected</div>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div style="width: 48px; height: 48px; background: var(--color-success-light); color: var(--color-success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                    </div>
+                    <div style="font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-text-primary);">{{ $activeListingsCount }}</div>
+                    <div style="font-size: var(--fs-sm); color: var(--color-text-secondary); font-weight: var(--fw-medium); margin-top: 4px;">Active Listings</div>
+                </div>
+            </div>
+
+            <!-- Retail Overview -->
+            <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa;">
+                <h3 style="font-size: var(--fs-base); font-weight: var(--fw-semibold); margin-bottom: var(--spacing-4); color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">13</div>
+                    Retail Coordination
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); font-size: var(--fs-sm);">
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Total Prospects</div><div style="font-weight: var(--fw-medium);">{{ count($retailers) }} Stores</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Target Countries</div><div style="font-weight: var(--fw-medium);">{{ count($targetCountries) }} Locations</div></div>
+                    <div><div style="color: var(--color-text-secondary); font-size: 12px; margin-bottom: 2px;">Selling Models</div>
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                            @foreach($sellingModels as $model)
+                                <span class="badge" style="background: var(--color-bg-base); border: 1px solid var(--color-border); font-size: 10px;">{{ $model }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Modal Footer -->
+        <div style="padding: var(--spacing-4) var(--spacing-6); border-top: 1px solid var(--color-border); background: var(--color-bg-base); display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-details-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- TAB: SETUP WIZARD -->
-<div id="tab-content-wizard" class="tab-content active">
+<div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}" style="{{ $status === 'completed' ? 'display:none;' : 'display:block;' }}">
 
 <!-- Dynamic Stepper -->
 <div style="position: relative; width: 100%; margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
@@ -2728,8 +2825,50 @@
         }
     }
 
+    let isEditMode = false;
+    let editModeStep = null;
+
+    function openViewModal() {
+        const modal = document.getElementById('view-details-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function startEditMode(stepNumber) {
+        isEditMode = true;
+        editModeStep = stepNumber;
+        switchMainTab('wizard');
+        jumpToStep(stepNumber);
+        
+        // Disable all other step navigations
+        for (let i = 1; i <= 14; i++) {
+            // Horizontal stepper items
+            const stepperItems = document.querySelectorAll('.stepper .step-item');
+            if (stepperItems.length >= i) {
+                const item = stepperItems[i-1];
+                if (i !== stepNumber) {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.4';
+                } else {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                }
+            }
+            
+            // Update submit button text to Save & Return
+            const formContainer = document.getElementById('step-form-container-' + i);
+            if (formContainer && i === stepNumber) {
+                const submitBtns = formContainer.querySelectorAll('button[type="submit"].btn-primary');
+                submitBtns.forEach(btn => btn.innerText = 'Save & Return');
+            }
+        }
+    }
+
     // Stepper wizard navigation Jumps
     function jumpToStep(stepNumber) {
+        if (isEditMode && stepNumber !== editModeStep) return;
+
         for (let i = 1; i <= 14; i++) {
             const form = document.getElementById('step-form-container-' + i);
             if (form) {
