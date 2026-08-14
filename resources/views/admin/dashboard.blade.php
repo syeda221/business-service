@@ -16,12 +16,12 @@
         <p class="page-subtitle">Here is what is happening across your SaaS platform today.</p>
     </div>
     <div>
-        <button class="btn btn-secondary">
-            Export Report
-        </button>
-        <button class="btn btn-primary">
-            Invite Operator
-        </button>
+        <a href="{{ route('services.index') }}" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Manage Services
+        </a>
     </div>
 </div>
 
@@ -70,7 +70,6 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Recent Transactions</h3>
-                <a href="#" style="font-size: var(--fs-xs); font-weight: var(--fw-semibold);">View All</a>
             </div>
             
             <div class="table-container">
@@ -86,7 +85,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($recentTransactions as $tx)
+                        @forelse($recentTransactions as $tx)
                             <tr>
                                 <td style="font-weight: var(--fw-semibold); color: var(--color-text-primary);">{{ $tx['id'] }}</td>
                                 <td>
@@ -108,7 +107,19 @@
                                 </td>
                                 <td>{{ $tx['date'] }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px 16px; color: var(--color-text-muted);">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 32px; height: 32px; opacity: 0.35;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                                        </svg>
+                                        <span style="font-size: var(--fs-sm); font-weight: var(--fw-medium);">No recent transactions found</span>
+                                        <span style="font-size: var(--fs-xs); opacity: 0.75;">When orders are processed in Marketplace & Retail services, they will appear here.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -123,7 +134,7 @@
             </div>
             
             <div class="product-list">
-                @foreach($topProducts as $product)
+                @forelse($topProducts as $product)
                     <div class="product-item">
                         <div class="product-info">
                             <span class="product-name">{{ $product['name'] }}</span>
@@ -131,7 +142,14 @@
                         </div>
                         <span class="product-revenue">{{ $product['revenue'] }}</span>
                     </div>
-                @endforeach
+                @empty
+                    <div style="text-align: center; padding: 36px 16px; color: var(--color-text-muted); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 28px; height: 28px; opacity: 0.35;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                        <span style="font-size: var(--fs-xs); font-weight: var(--fw-medium);">No products added yet</span>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
