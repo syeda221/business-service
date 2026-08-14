@@ -9,11 +9,9 @@
 
 @section('content')
 <!-- Breadcrumbs -->
-<nav class="breadcrumbs" style="margin-bottom: var(--spacing-2); margin-top: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+<nav class="breadcrumbs">
     <a href="{{ route('admin.dashboard') }}">Console</a>
-    <span>/</span>
     <a href="{{ route('services.index') }}">Services</a>
-    <span>/</span>
     <span>Business Setup & Compliance</span>
 </nav>
 
@@ -65,7 +63,7 @@
 @endif
 
 <!-- Tabs Navigation -->
-<div class="tabs-navigation" style="margin-bottom: 0;">
+<div class="tabs-navigation" style="margin-bottom: var(--spacing-3);">
     <button class="tab-btn {{ $percentage < 100 ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $percentage == 100 ? 'display: none;' : '' }}">Setup Stepper</button>
     <button class="tab-btn {{ $percentage == 100 ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $percentage < 100 ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
@@ -73,14 +71,32 @@
 <!-- STEPS WIZARD -->
 <div id="tab-content-wizard" class="tab-content {{ $percentage < 100 ? 'active' : '' }}">
 
+    <!-- Mobile Step Status Bar -->
+    <div class="mobile-step-indicator" style="display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: var(--spacing-3); font-size: var(--fs-xs); box-shadow: var(--shadow-card);">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--color-text-muted);">Step {{ $currentStep }} of 7:</span>
+            <strong style="color: var(--color-primary);" id="mobile-step-name">
+                @if($currentStep == 1) Business Info
+                @elseif($currentStep == 2) LLC Formation
+                @elseif($currentStep == 3) EIN
+                @elseif($currentStep == 4) Documents
+                @elseif($currentStep == 5) Banking
+                @elseif($currentStep == 6) Tax & Compliance
+                @elseif($currentStep == 7) Business Structure
+                @endif
+            </strong>
+        </div>
+        <span class="badge badge-success">{{ $percentage }}% Done</span>
+    </div>
+
     <!-- Stepper Navigation -->
-    <div class="stepper-container" id="stepper-container-div" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3); position: relative;">
-        <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-150)" id="stepper-left-btn" style="display: none;">
+    <div class="stepper-container" id="stepper-container-div" style="margin-bottom: var(--spacing-4); position: relative;">
+        <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-150)" id="stepper-left-btn" style="display: none;" aria-label="Scroll left">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
         </button>
-        <button type="button" class="stepper-scroll-btn scroll-right" onclick="scrollStepper(150)" id="stepper-right-btn" style="display: none;">
+        <button type="button" class="stepper-scroll-btn scroll-right" onclick="scrollStepper(150)" id="stepper-right-btn" style="display: none;" aria-label="Scroll right">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
@@ -111,7 +127,6 @@
                 </span>
             </li>
             <!-- Step 4 -->
-            <!-- We flag Step 4 as Action Required if any required files are missing and currentStep >= 4 -->
             @php
                 $step4Class = 'not-started';
                 if ($currentStep == 4) {
@@ -155,7 +170,7 @@
     </div>
 
     <!-- WIZARD STEP FORMS -->
-    <div class="card" style="padding: var(--spacing-5) var(--spacing-6);">
+    <div class="card" style="padding: var(--spacing-4) var(--spacing-4);">
 
         <!-- ================== STEP 1: BUSINESS INFO ================== -->
         <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">
@@ -247,7 +262,7 @@
                 </div>
 
                 <!-- Conditional Fields: Yes (Already formed) -->
-                <div id="llc-yes-fields" style="display: {{ $hasLlc == 'yes' ? 'grid' : 'none' }}; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div id="llc-yes-fields" class="form-grid-2" style="display: {{ $hasLlc == 'yes' ? 'grid' : 'none' }};">
                     <div class="form-group">
                         <label for="llc_name" class="form-label">LLC Name <span style="color: var(--color-danger);">*</span></label>
                         <input type="text" name="llc_name" id="llc_name" class="form-control" value="{{ old('llc_name', $payload['llc_name'] ?? '') }}">
@@ -259,7 +274,7 @@
                 </div>
 
                 <!-- Conditional Fields: No (Need formation) -->
-                <div id="llc-no-fields" style="display: {{ $hasLlc == 'no' ? 'grid' : 'none' }}; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div id="llc-no-fields" class="form-grid-2" style="display: {{ $hasLlc == 'no' ? 'grid' : 'none' }};">
                     <div class="form-group">
                         <label for="preferred_state" class="form-label">Preferred State <span style="color: var(--color-danger);">*</span></label>
                         <select name="preferred_state" id="preferred_state" class="form-control">
@@ -1044,6 +1059,16 @@
         }
     }
 
+    const stepNames = {
+        1: 'Business Info',
+        2: 'LLC Formation',
+        3: 'EIN',
+        4: 'Documents',
+        5: 'Banking',
+        6: 'Tax & Compliance',
+        7: 'Business Structure'
+    };
+
     // Step switching within Wizard
     function jumpToStep(stepNumber) {
         if (isEditMode && stepNumber !== editModeStep) return;
@@ -1060,10 +1085,22 @@
             if (item) {
                 if (i === stepNumber) {
                     item.classList.add('in-progress');
+                    // Smoothly scroll active step into view
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
                     item.classList.remove('in-progress');
                 }
             }
+        }
+
+        // Update mobile indicator text
+        const mobileIndicator = document.getElementById('mobile-step-name');
+        if (mobileIndicator && stepNames[stepNumber]) {
+            mobileIndicator.innerText = stepNames[stepNumber];
+        }
+
+        if (typeof updateStepperScrollButtons === 'function') {
+            setTimeout(updateStepperScrollButtons, 300);
         }
     }
 

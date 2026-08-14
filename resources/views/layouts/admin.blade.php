@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'SaaS Admin') - Enterprise Portal</title>
@@ -27,7 +27,30 @@
             const toggleBtn = document.getElementById('sidebar-toggle-btn');
             const sidebar = document.getElementById('sidebar-menu');
             const mainContent = document.getElementById('main-content-layout');
+            const backdrop = document.getElementById('sidebar-backdrop');
             
+            function toggleSidebarMobile() {
+                if (sidebar) {
+                    const isOpen = sidebar.classList.toggle('open');
+                    if (backdrop) {
+                        if (isOpen) {
+                            backdrop.classList.add('active');
+                        } else {
+                            backdrop.classList.remove('active');
+                        }
+                    }
+                }
+            }
+
+            function closeSidebarMobile() {
+                if (sidebar && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('active');
+                }
+            }
+
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -37,19 +60,40 @@
                             mainContent.classList.toggle('collapsed');
                         }
                     } else {
-                        sidebar.classList.toggle('open');
+                        toggleSidebarMobile();
                     }
                 });
                 
+                if (backdrop) {
+                    backdrop.addEventListener('click', function() {
+                        closeSidebarMobile();
+                    });
+                }
+
                 // Close sidebar if user clicks outside of it on mobile
                 document.addEventListener('click', function(event) {
-                    const isClickInsideSidebar = sidebar.contains(event.target);
-                    const isClickInsideToggle = toggleBtn.contains(event.target);
-                    
-                    if (!isClickInsideSidebar && !isClickInsideToggle && sidebar.classList.contains('open')) {
-                        sidebar.classList.remove('open');
+                    if (window.innerWidth <= 1024) {
+                        const isClickInsideSidebar = sidebar.contains(event.target);
+                        const isClickInsideToggle = toggleBtn.contains(event.target);
+                        
+                        if (!isClickInsideSidebar && !isClickInsideToggle && sidebar.classList.contains('open')) {
+                            closeSidebarMobile();
+                        }
                     }
                 });
+            }
+
+            // Auto-scroll active step in steppers into view smoothly on mobile/desktop
+            const activeStep = document.querySelector('.step-item.in-progress');
+            const stepperContainer = document.querySelector('.stepper-container');
+            if (activeStep && stepperContainer) {
+                setTimeout(() => {
+                    const containerRect = stepperContainer.getBoundingClientRect();
+                    const stepRect = activeStep.getBoundingClientRect();
+                    if (stepRect.left < containerRect.left || stepRect.right > containerRect.right) {
+                        activeStep.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }, 100);
             }
         });
     </script>

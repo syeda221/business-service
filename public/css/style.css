@@ -7,6 +7,13 @@
     padding: 0;
 }
 
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
 body {
     font-family: var(--font-sans);
     font-size: var(--fs-base);
@@ -17,16 +24,23 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+img, svg, video {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-weight: var(--fw-semibold);
     color: var(--color-text-primary);
     line-height: 1.25;
+    word-break: break-word;
 }
 
-h1 { font-size: var(--fs-3xl); letter-spacing: -0.02em; }
-h2 { font-size: var(--fs-2xl); letter-spacing: -0.01em; }
-h3 { font-size: var(--fs-xl); }
+h1 { font-size: clamp(1.5rem, 4vw, var(--fs-3xl)); letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.25rem, 3vw, var(--fs-2xl)); letter-spacing: -0.01em; }
+h3 { font-size: clamp(1.125rem, 2.5vw, var(--fs-xl)); }
 h4 { font-size: var(--fs-lg); }
 h5 { font-size: var(--fs-base); }
 h6 { font-size: var(--fs-sm); }
@@ -57,12 +71,14 @@ a:hover {
     font-size: var(--fs-sm);
     font-weight: var(--fw-medium);
     padding: var(--spacing-2) var(--spacing-4);
-    height: 40px;
+    min-height: 38px;
     border-radius: var(--radius-sm);
     border: 1px solid transparent;
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    text-decoration: none;
+    user-select: none;
 }
 
 .btn-primary {
@@ -108,6 +124,7 @@ a:hover {
 /* Form Controls & Labels */
 .form-group {
     margin-bottom: var(--spacing-5);
+    width: 100%;
 }
 
 .form-label {
@@ -120,7 +137,8 @@ a:hover {
 
 .form-control {
     width: 100%;
-    height: 40px;
+    max-width: 100%;
+    min-height: 40px;
     padding: var(--spacing-2) var(--spacing-3);
     font-family: var(--font-sans);
     font-size: var(--fs-sm);
@@ -129,6 +147,12 @@ a:hover {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    box-sizing: border-box;
+}
+
+textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
 }
 
 .form-control::placeholder {
@@ -154,6 +178,7 @@ a:hover {
     border-radius: 4px;
     cursor: pointer;
     accent-color: var(--color-primary);
+    flex-shrink: 0;
 }
 
 .form-error {
@@ -168,14 +193,24 @@ a:hover {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-card);
     border: 1px solid var(--color-border);
-    padding: var(--spacing-6);
+    padding: var(--spacing-5);
     overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (min-width: 768px) {
+    .card {
+        padding: var(--spacing-6);
+    }
 }
 
 .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
     margin-bottom: var(--spacing-4);
     border-bottom: 1px solid var(--color-border);
     padding-bottom: var(--spacing-4);
@@ -183,11 +218,12 @@ a:hover {
 
 /* Alert Notifications */
 .alert {
-    padding: var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-4);
     border-radius: var(--radius-sm);
     margin-bottom: var(--spacing-4);
     font-size: var(--fs-sm);
     border: 1px solid transparent;
+    word-break: break-word;
 }
 
 .alert-danger {
@@ -202,17 +238,21 @@ a:hover {
     color: var(--color-success-dark);
 }
 
-/* Professional Tables */
+/* Professional Responsive Tables */
 .table-container {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background-color: #ffffff;
+    margin-bottom: var(--spacing-2);
 }
 
 .table {
     width: 100%;
+    min-width: 580px;
     border-collapse: collapse;
     text-align: left;
     font-size: var(--fs-sm);
@@ -227,10 +267,11 @@ a:hover {
     text-transform: uppercase;
     font-size: var(--fs-xs);
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 .table td {
-    padding: var(--spacing-4);
+    padding: var(--spacing-3) var(--spacing-4);
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text-secondary);
     vertical-align: middle;
@@ -252,6 +293,7 @@ a:hover {
     font-size: var(--fs-xs);
     font-weight: var(--fw-medium);
     border-radius: var(--radius-full);
+    white-space: nowrap;
 }
 
 .badge-success {
@@ -269,22 +311,73 @@ a:hover {
     color: var(--color-danger-dark);
 }
 
-/* Breadcrumbs */
+/* Breadcrumbs (Unified, Clean & Wrapping) */
 .breadcrumbs {
     display: flex;
     align-items: center;
-    gap: var(--spacing-2);
+    flex-wrap: wrap;
+    gap: 4px;
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-bottom: var(--spacing-4);
+    line-height: 1.4;
 }
 
 .breadcrumbs a {
     color: var(--color-text-secondary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color var(--transition-fast);
 }
 
-.breadcrumbs span::before {
-    content: "/";
-    margin: 0 var(--spacing-1);
-    color: var(--color-text-muted);
+.breadcrumbs a:hover {
+    color: var(--color-primary);
 }
+
+.breadcrumbs a:not(:last-child)::after {
+    content: "/";
+    margin-left: 6px;
+    margin-right: 2px;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+}
+
+.breadcrumbs span {
+    color: var(--color-text-primary);
+    font-weight: var(--fw-medium);
+}
+
+/* Responsive Form Rows */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .form-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .form-row-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.form-row-full {
+    grid-column: 1 / -1;
+}
+
