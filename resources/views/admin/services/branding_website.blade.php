@@ -48,11 +48,37 @@
         4 => $hasAdvertising,
         5 => true
     ];
+
+    $visibleCount = 0;
+    $completedCount = 0;
+    
+    if ($stepsVisible[1]) {
+        $visibleCount++;
+        if (!empty($selected)) $completedCount++;
+    }
+    if ($stepsVisible[2]) {
+        $visibleCount++;
+        if (!empty($payload['brand_name'])) $completedCount++;
+    }
+    if ($stepsVisible[3]) {
+        $visibleCount++;
+        if (!empty($payload['website_platform'])) $completedCount++;
+    }
+    if ($stepsVisible[4]) {
+        $visibleCount++;
+        if (!empty($payload['ad_platforms'])) $completedCount++;
+    }
+    if ($stepsVisible[5]) {
+        $visibleCount++;
+        if ($status === 'completed') $completedCount++;
+    }
+    
+    $percentage = $visibleCount > 0 ? round(($completedCount / $visibleCount) * 100) : 0;
 @endphp
 
 <!-- Completed banner -->
 @if($status === 'completed')
-    <div class="card" style="border-color: var(--color-success); background-color: var(--color-success-light); margin-bottom: var(--spacing-6); text-align: center; padding: var(--spacing-6);">
+    <div class="card" style="border-color: var(--color-success); background-color: var(--color-success-light); margin-bottom: var(--spacing-4); text-align: center; padding: var(--spacing-6);">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 48px; height: 48px; color: var(--color-success); margin: 0 auto var(--spacing-3);">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0110 21a3.745 3.745 0 01-3.068-1.593 3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0114 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
         </svg>
@@ -61,9 +87,8 @@
     </div>
 @endif
 
-
 <!-- Tabs Navigation -->
-<div class="tabs-navigation" style="margin-bottom: 0;">
+<div class="tabs-navigation" style="margin-bottom: var(--spacing-3);">
     <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Stepper</button>
     <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Overview Dashboard</button>
 </div>
@@ -71,54 +96,70 @@
 <!-- TAB: STEPS WIZARD -->
 <div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}">
 
-<!-- Dynamic Stepper -->
-<div class="stepper-container" style="margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
-    <ol class="stepper" style="min-width: 600px;">
-        <!-- Step 1 -->
-        <li class="step-item {{ $currentStep == 1 ? 'in-progress' : ($currentStep > 1 ? 'completed' : 'not-started') }}" id="step-nav-1" onclick="jumpToStep(1)">
-            <div class="step-circle">01</div>
-            <span class="step-title">Service Selection</span>
-            <span class="step-status">@if($currentStep > 1) ✓ Done @else ● Active @endif</span>
-        </li>
-        
-        <!-- Step 2 -->
-        @if($hasBranding)
-            <li class="step-item {{ $currentStep == 2 ? 'in-progress' : ($currentStep > 2 ? 'completed' : 'not-started') }}" id="step-nav-2" onclick="jumpToStep(2)">
-                <div class="step-circle">02</div>
-                <span class="step-title">Branding</span>
-                <span class="step-status">@if($currentStep > 2) ✓ Done @elseif($currentStep == 2) ● Active @else ○ Wait @endif</span>
+    <!-- Mobile Step Status Bar -->
+    <div class="mobile-step-indicator" style="display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: var(--spacing-3); font-size: var(--fs-xs); box-shadow: var(--shadow-card);">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--color-text-muted);">Step {{ $currentStep }} of 5:</span>
+            <strong style="color: var(--color-primary);" id="mobile-step-name">
+                @if($currentStep == 1) Service Selection
+                @elseif($currentStep == 2) Branding Requirements
+                @elseif($currentStep == 3) Website Setup
+                @elseif($currentStep == 4) Digital Advertising
+                @elseif($currentStep == 5) Review & Finish
+                @endif
+            </strong>
+        </div>
+        <span class="badge badge-success">{{ $percentage }}% Done</span>
+    </div>
+
+    <!-- Dynamic Stepper -->
+    <div class="stepper-container" id="stepper-container-div" style="margin-bottom: var(--spacing-4);">
+        <ol class="stepper" id="stepper-list">
+            <!-- Step 1 -->
+            <li class="step-item {{ $currentStep == 1 ? 'in-progress' : ($currentStep > 1 ? 'completed' : 'not-started') }}" id="step-nav-1" onclick="jumpToStep(1)">
+                <div class="step-circle">01</div>
+                <span class="step-title">Service Selection</span>
+                <span class="step-status">@if($currentStep > 1) ✓ Done @else ● Active @endif</span>
             </li>
-        @endif
+            
+            <!-- Step 2 -->
+            @if($hasBranding)
+                <li class="step-item {{ $currentStep == 2 ? 'in-progress' : ($currentStep > 2 ? 'completed' : 'not-started') }}" id="step-nav-2" onclick="jumpToStep(2)">
+                    <div class="step-circle">02</div>
+                    <span class="step-title">Branding</span>
+                    <span class="step-status">@if($currentStep > 2) ✓ Done @elseif($currentStep == 2) ● Active @else ○ Wait @endif</span>
+                </li>
+            @endif
 
-        <!-- Step 3 -->
-        @if($hasWebsite)
-            <li class="step-item {{ $currentStep == 3 ? 'in-progress' : ($currentStep > 3 ? 'completed' : 'not-started') }}" id="step-nav-3" onclick="jumpToStep(3)">
-                <div class="step-circle">03</div>
-                <span class="step-title">Website</span>
-                <span class="step-status">@if($currentStep > 3) ✓ Done @elseif($currentStep == 3) ● Active @else ○ Wait @endif</span>
+            <!-- Step 3 -->
+            @if($hasWebsite)
+                <li class="step-item {{ $currentStep == 3 ? 'in-progress' : ($currentStep > 3 ? 'completed' : 'not-started') }}" id="step-nav-3" onclick="jumpToStep(3)">
+                    <div class="step-circle">03</div>
+                    <span class="step-title">Website</span>
+                    <span class="step-status">@if($currentStep > 3) ✓ Done @elseif($currentStep == 3) ● Active @else ○ Wait @endif</span>
+                </li>
+            @endif
+
+            <!-- Step 4 -->
+            @if($hasAdvertising)
+                <li class="step-item {{ $currentStep == 4 ? 'in-progress' : ($currentStep > 4 ? 'completed' : 'not-started') }}" id="step-nav-4" onclick="jumpToStep(4)">
+                    <div class="step-circle">04</div>
+                    <span class="step-title">Advertising</span>
+                    <span class="step-status">@if($currentStep > 4) ✓ Done @elseif($currentStep == 4) ● Active @else ○ Wait @endif</span>
+                </li>
+            @endif
+
+            <!-- Step 5 -->
+            <li class="step-item {{ $currentStep == 5 ? 'in-progress' : ($status === 'completed' ? 'completed' : 'not-started') }}" id="step-nav-5" onclick="jumpToStep(5)">
+                <div class="step-circle">05</div>
+                <span class="step-title">Review & Finish</span>
+                <span class="step-status">@if($status === 'completed') ✓ Completed @elseif($currentStep == 5) ● Active @else ○ Wait @endif</span>
             </li>
-        @endif
+        </ol>
+    </div>
 
-        <!-- Step 4 -->
-        @if($hasAdvertising)
-            <li class="step-item {{ $currentStep == 4 ? 'in-progress' : ($currentStep > 4 ? 'completed' : 'not-started') }}" id="step-nav-4" onclick="jumpToStep(4)">
-                <div class="step-circle">04</div>
-                <span class="step-title">Advertising</span>
-                <span class="step-status">@if($currentStep > 4) ✓ Done @elseif($currentStep == 4) ● Active @else ○ Wait @endif</span>
-            </li>
-        @endif
-
-        <!-- Step 5 -->
-        <li class="step-item {{ $currentStep == 5 ? 'in-progress' : ($status === 'completed' ? 'completed' : 'not-started') }}" id="step-nav-5" onclick="jumpToStep(5)">
-            <div class="step-circle">05</div>
-            <span class="step-title">Review & Finish</span>
-            <span class="step-status">@if($status === 'completed') ✓ Completed @elseif($currentStep == 5) ● Active @else ○ Wait @endif</span>
-        </li>
-    </ol>
-</div>
-
-<!-- Forms Container -->
-<div class="card" style="padding: var(--spacing-5) var(--spacing-6);">
+    <!-- Forms Container -->
+    <div class="card" style="padding: var(--spacing-4) var(--spacing-4);">
 
     <!-- ================== STEP 1: SERVICE SELECTION ================== -->
     <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">
@@ -234,7 +275,7 @@
                     <p style="font-size: var(--fs-xs); color: var(--color-text-muted); margin-bottom: var(--spacing-2);">Please manage branding uploads inside your documents or describe reference URLs in instructions.</p>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="brand_name" class="form-label">Brand Name <span style="color: var(--color-danger);">*</span></label>
                         <input type="text" name="brand_name" id="brand_name" class="form-control" value="{{ old('brand_name', $payload['brand_name'] ?? '') }}" required>
@@ -245,7 +286,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="preferred_colors" class="form-label">Preferred Colors <span style="color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
                         <input type="text" name="preferred_colors" id="preferred_colors" class="form-control" placeholder="e.g. Indigo and Soft Gold (#4F46E5, #D97706)" value="{{ old('preferred_colors', $payload['preferred_colors'] ?? '') }}">
@@ -308,7 +349,7 @@
                     <input type="url" name="existing_website_url" id="existing_website_url" class="form-control" placeholder="https://example.com" value="{{ old('existing_website_url', $payload['existing_website_url'] ?? '') }}">
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="website_platform" class="form-label">Website Platform <span style="color: var(--color-danger);">*</span></label>
                         <select name="website_platform" id="website_platform" class="form-control" required>
@@ -325,7 +366,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="number_products" class="form-label">Number of Products <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" name="number_products" id="number_products" class="form-control" min="0" value="{{ old('number_products', $payload['number_products'] ?? 0) }}" required>
@@ -355,7 +396,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label">Payment Gateway Required? <span style="color: var(--color-danger);">*</span></label>
                         <div class="segmented-control">
@@ -431,7 +472,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label">Do you have existing ad accounts? <span style="color: var(--color-danger);">*</span></label>
                         <div class="segmented-control">
@@ -457,7 +498,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="fb_page_url" class="form-label">Facebook / Instagram Page URL <span style="color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
                         <input type="url" name="fb_page_url" id="fb_page_url" class="form-control" value="{{ old('fb_page_url', $payload['fb_page_url'] ?? '') }}">
@@ -468,7 +509,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="pinterest_account" class="form-label">Pinterest Account URL <span style="color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
                         <input type="url" name="pinterest_account" id="pinterest_account" class="form-control" value="{{ old('pinterest_account', $payload['pinterest_account'] ?? '') }}">
@@ -979,6 +1020,14 @@
         }
     }
 
+    const stepNames = {
+        1: 'Service Selection',
+        2: 'Branding Requirements',
+        3: 'Website Setup',
+        4: 'Digital Advertising',
+        5: 'Review & Finish'
+    };
+
     // Step switching within Wizard
     function jumpToStep(stepNumber) {
         if (isEditMode && stepNumber !== editModeStep) return;
@@ -994,10 +1043,18 @@
             if (item) {
                 if (i === stepNumber) {
                     item.classList.add('in-progress');
+                    // Smoothly scroll active step into view on touch devices
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
                     item.classList.remove('in-progress');
                 }
             }
+        }
+
+        // Update mobile indicator text
+        const mobileIndicator = document.getElementById('mobile-step-name');
+        if (mobileIndicator && stepNames[stepNumber]) {
+            mobileIndicator.innerText = stepNames[stepNumber];
         }
     }
 
