@@ -8,18 +8,29 @@
     <style>
         .form-row {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr;
             gap: var(--spacing-4);
             margin-bottom: var(--spacing-4);
         }
-        .form-row-full {
-            grid-column: span 2;
+        @media (min-width: 640px) {
+            .form-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-row-full {
+                grid-column: span 2;
+            }
         }
         .selection-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: var(--spacing-4);
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--spacing-3);
             margin-bottom: var(--spacing-6);
+        }
+        @media (min-width: 640px) {
+            .selection-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: var(--spacing-4);
+            }
         }
         .selection-card {
             border: 1px solid var(--color-border);
@@ -92,7 +103,7 @@
             background-color: var(--color-bg-base);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
-            padding: var(--spacing-6);
+            padding: var(--spacing-5);
             margin-bottom: var(--spacing-6);
         }
         .summary-badge-list {
@@ -198,6 +209,29 @@
         13 => 'Physical Retail',
         14 => 'Coordination'
     ];
+
+    $totalStepsCount = 14;
+    $completedStepsCount = 0;
+    $stepChecklist = [
+        1 => !empty($selectedMarketplaces),
+        2 => $activeAccountsCount > 0 || count($accounts) > 0,
+        3 => !empty($payload['store_name']),
+        4 => !empty($payload['verification_status']),
+        5 => count($products) > 0,
+        6 => count($listings) > 0,
+        7 => count($optimizations) > 0,
+        8 => count($pricings) > 0,
+        9 => count($inventories) > 0,
+        10 => !empty($payload['launch_status']),
+        11 => count($orders) > 0,
+        12 => count($campaigns) > 0,
+        13 => !empty($payload['physical_retail_required']),
+        14 => count($retailers) > 0 || ($status === 'completed'),
+    ];
+    foreach($stepChecklist as $isDone) {
+        if ($isDone) $completedStepsCount++;
+    }
+    $percentage = round(($completedStepsCount / $totalStepsCount) * 100);
 @endphp
 
 <!-- Tabs Navigation -->
@@ -237,7 +271,20 @@
         </div>
     @else
         <!-- SERVICE OVERVIEW PANEL -->
-        <div class="stats-panel-row" style="margin-top: var(--spacing-3);">
+        <div class="progress-banner" style="margin-top: var(--spacing-3);">
+            <div class="progress-banner-header">
+                <div>
+                    <h3 style="font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-bottom: 2px;">Marketplace & Retail Progress</h3>
+                    <p style="font-size: var(--fs-sm); color: var(--color-text-secondary);">Setup, listings, inventory & store status</p>
+                </div>
+                <div class="progress-percentage">{{ $percentage }}%</div>
+            </div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: {{ $percentage }}%;"></div>
+            </div>
+        </div>
+
+        <div class="stats-panel-row">
             <div class="stat-card-mini">
                 <span class="stat-card-title">Selected Markets</span>
                 <span class="stat-card-value">{{ count($selectedMarketplaces) }}</span>
@@ -286,7 +333,7 @@
         <!-- Modal Body -->
         <div style="padding: var(--spacing-6); overflow-y: auto; background: var(--color-bg-base); display: flex; flex-direction: column; gap: var(--spacing-5);">
             
-            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5);">
+            <div class="form-grid-2">
                 <!-- Stat Card 1 -->
                 <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: var(--spacing-4); background: #fafafa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
                     <div style="width: 48px; height: 48px; background: var(--color-primary-light); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
@@ -340,6 +387,17 @@
 
 <!-- TAB: SETUP WIZARD -->
 <div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}" style="{{ $status === 'completed' ? 'display:none;' : 'display:block;' }}">
+
+<!-- Mobile Step Status Bar -->
+<div class="mobile-step-indicator" style="display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: var(--spacing-3); font-size: var(--fs-xs); box-shadow: var(--shadow-card);">
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="color: var(--color-text-muted);">Step {{ $currentStep }} of 14:</span>
+        <strong style="color: var(--color-primary);" id="mobile-step-name">
+            {{ $stepTitles[$currentStep] ?? 'Selection' }}
+        </strong>
+    </div>
+    <span class="badge badge-success">{{ $percentage }}% Done</span>
+</div>
 
 <!-- Dynamic Stepper -->
 <div style="position: relative; width: 100%; margin-top: var(--spacing-2); margin-bottom: var(--spacing-3);">
@@ -1557,7 +1615,7 @@
 
             <div class="form-group">
                 <label class="form-label">Launch Checklist Checklist</label>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-3); margin-top: var(--spacing-2);">
+                <div class="form-grid-2" style="margin-top: var(--spacing-2);">
                     @foreach($checklist as $item => $checked)
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span style="display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: var(--radius-full); background-color: {{ $checked ? 'var(--color-success)' : 'var(--color-border)' }}; color: #ffffff;">
@@ -1607,7 +1665,7 @@
         <!-- Filters Section -->
         <div class="card" style="padding: var(--spacing-4); margin-bottom: var(--spacing-6); background-color: var(--color-bg-base); border: 1px solid var(--color-border);">
             <h3 style="font-size: var(--fs-xs); text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: var(--spacing-3); font-weight: var(--fw-semibold);">Filter Orders</h3>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-3);">
+            <div class="form-grid-4">
                 <div>
                     <label class="form-label" style="font-size: 10px;">Marketplace</label>
                     <select id="filter_ord_marketplace" class="form-control" style="height: 32px;" onchange="runOrderFilters()">
@@ -2865,6 +2923,23 @@
         }
     }
 
+    const stepNames = {
+        1: 'Selection',
+        2: 'Account Setup',
+        3: 'Store Setup',
+        4: 'Verification',
+        5: 'Product Catalog',
+        6: 'Product Listing',
+        7: 'Optimization',
+        8: 'Pricing Setup',
+        9: 'Inventory Setup',
+        10: 'Launch Checklist',
+        11: 'Orders',
+        12: 'Advertising',
+        13: 'Physical Retail',
+        14: 'Coordination'
+    };
+
     // Stepper wizard navigation Jumps
     function jumpToStep(stepNumber) {
         if (isEditMode && stepNumber !== editModeStep) return;
@@ -2875,14 +2950,21 @@
                 form.style.display = (i === stepNumber) ? 'block' : 'none';
             }
 
-            const items = document.querySelectorAll('.step-item');
+            const items = document.querySelectorAll('.stepper .step-item');
             if (items[i-1]) {
                 if (i === stepNumber) {
                     items[i-1].classList.add('in-progress');
+                    items[i-1].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
                     items[i-1].classList.remove('in-progress');
                 }
             }
+        }
+
+        // Update mobile step indicator
+        const mobileIndicator = document.getElementById('mobile-step-name');
+        if (mobileIndicator && stepNames[stepNumber]) {
+            mobileIndicator.innerText = stepNames[stepNumber];
         }
     }
 
