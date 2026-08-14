@@ -69,11 +69,28 @@
         12 => 'Manufacturing',
         13 => 'Final Approval'
     ];
+
+    $completedStepsCount = 0;
+    if (!empty($payload['product_category'])) $completedStepsCount++;
+    if (!empty($payload['niche'])) $completedStepsCount++;
+    if (!empty($payload['market_trend'])) $completedStepsCount++;
+    if (!empty($payload['competitor_records'])) $completedStepsCount++;
+    if (!empty($payload['selling_price'])) $completedStepsCount++;
+    if (!empty($payload['validation_notes'])) $completedStepsCount++;
+    if (!empty($payload['supplier_records'])) $completedStepsCount++;
+    if (!empty($payload['best_supplier'])) $completedStepsCount++;
+    if (!empty($payload['sample_ordered'])) $completedStepsCount++;
+    if (!empty($payload['quality_result'])) $completedStepsCount++;
+    if (!empty($payload['negotiated_price'])) $completedStepsCount++;
+    if (!empty($payload['production_status'])) $completedStepsCount++;
+    if ($status === 'completed') $completedStepsCount++;
+    
+    $percentage = round(($completedStepsCount / 13) * 100);
 @endphp
 
 <!-- Completed Banner -->
 @if($status === 'completed')
-    <div class="card" style="border-color: var(--color-success); background-color: var(--color-success-light); margin-bottom: var(--spacing-6); text-align: center; padding: var(--spacing-6);">
+    <div class="card" style="border-color: var(--color-success); background-color: var(--color-success-light); margin-bottom: var(--spacing-4); text-align: center; padding: var(--spacing-6);">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 48px; height: 48px; color: var(--color-success); margin: 0 auto var(--spacing-3);">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0110 21a3.745 3.745 0 01-3.068-1.593 3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0114 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
         </svg>
@@ -83,43 +100,39 @@
 @endif
 
 <!-- Tabs Navigation -->
-<div class="tabs-navigation" style="margin-bottom: 0;">
+<div class="tabs-navigation" style="margin-bottom: var(--spacing-3);">
     <button class="tab-btn {{ $status !== 'completed' ? 'active' : '' }}" id="tab-btn-wizard" onclick="switchMainTab('wizard')" style="{{ $status === 'completed' ? 'display: none;' : '' }}">Setup Wizard</button>
     <button class="tab-btn {{ $status === 'completed' ? 'active' : '' }}" id="tab-btn-overview" onclick="switchMainTab('overview')" style="{{ $status !== 'completed' ? 'display: none;' : '' }}">Sourcing Dashboard</button>
 </div>
 
 <!-- ================== TAB 1: SETUP WIZARD ================== -->
 <div id="tab-content-wizard" class="tab-content {{ $status !== 'completed' ? 'active' : '' }}">
-    <!-- Horizontal Stepper (Scrollable Container with Nav Arrows) -->
-    <div style="position: relative; width: 100%; margin-top: var(--spacing-2);">
-        <!-- Scroll Left Button -->
-        <button type="button" class="stepper-scroll-btn scroll-left" onclick="scrollStepper(-240)" aria-label="Scroll Left">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-        </button>
 
-        <!-- Scroll Right Button -->
-        <button type="button" class="stepper-scroll-btn scroll-right" onclick="scrollStepper(240)" aria-label="Scroll Right">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 14px; height: 14px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-        </button>
-
-        <div class="stepper-container" id="stepper-scroll-container">
-            <ol class="stepper" style="min-width: 1820px; padding-bottom: var(--spacing-2);">
-                @foreach($stepTitles as $stepNum => $title)
-                    <li class="step-item {{ $currentStep == $stepNum ? 'in-progress' : ($currentStep > $stepNum ? 'completed' : 'not-started') }}" onclick="jumpToStep({{ $stepNum }})">
-                        <div class="step-circle">{{ str_pad($stepNum, 2, '0', STR_PAD_LEFT) }}</div>
-                        <span class="step-title">{{ $title }}</span>
-                    </li>
-                @endforeach
-            </ol>
+    <!-- Mobile Step Status Bar -->
+    <div class="mobile-step-indicator" style="display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: var(--spacing-3); font-size: var(--fs-xs); box-shadow: var(--shadow-card);">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--color-text-muted);">Step {{ $currentStep }} of 13:</span>
+            <strong style="color: var(--color-primary);" id="mobile-step-name">
+                {{ $stepTitles[$currentStep] ?? 'Step ' . $currentStep }}
+            </strong>
         </div>
+        <span class="badge badge-success">{{ $percentage }}% Done</span>
+    </div>
+
+    <!-- Horizontal Stepper -->
+    <div class="stepper-container" id="stepper-scroll-container" style="margin-bottom: var(--spacing-4);">
+        <ol class="stepper" id="stepper-list">
+            @foreach($stepTitles as $stepNum => $title)
+                <li class="step-item {{ $currentStep == $stepNum ? 'in-progress' : ($currentStep > $stepNum ? 'completed' : 'not-started') }}" id="step-nav-{{ $stepNum }}" onclick="jumpToStep({{ $stepNum }})">
+                    <div class="step-circle">{{ str_pad($stepNum, 2, '0', STR_PAD_LEFT) }}</div>
+                    <span class="step-title">{{ $title }}</span>
+                </li>
+            @endforeach
+        </ol>
     </div>
 
     <!-- Wizard Form Cards -->
-    <div class="card" style="padding: var(--spacing-5) var(--spacing-6); margin-bottom: 80px;">
+    <div class="card" style="padding: var(--spacing-4) var(--spacing-4); margin-bottom: 80px;">
 
         <!-- STEP 1: PRODUCT REQUIREMENTS -->
         <div id="step-form-container-1" class="step-form-content {{ $currentStep == 1 ? 'active' : '' }}" style="display: {{ $currentStep == 1 ? 'block' : 'none' }};">
@@ -134,7 +147,7 @@
                 <input type="hidden" name="step" value="1">
                 <input type="hidden" name="action" id="step-1-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="product_category" class="form-label">Product Category <span style="color: var(--color-danger);">*</span></label>
                         <select name="product_category" id="product_category" class="form-control" required>
@@ -156,7 +169,7 @@
                     <textarea name="product_description" id="product_description" rows="3" class="form-control" style="height: auto;" placeholder="Brief details about build, design, material..." required>{{ old('product_description', $payload['product_description'] ?? '') }}</textarea>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label">Target Market <span style="color: var(--color-danger);">*</span></label>
                         <div class="custom-multiselect-container" id="target_market_container">
@@ -207,7 +220,7 @@
                     <textarea name="target_customer" id="target_customer" rows="2" class="form-control" style="height: auto;" placeholder="e.g. Home bakers, professional chefs looking for heat-resistance..." required>{{ old('target_customer', $payload['target_customer'] ?? '') }}</textarea>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-4">
                     <div class="form-group">
                         <label for="selling_price" class="form-label">Selling Price ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="selling_price" id="selling_price" class="form-control" value="{{ old('selling_price', $payload['selling_price'] ?? '') }}" required>
@@ -238,9 +251,9 @@
                     </div>
                 </div>
 
-                <div class="form-group" id="customization-details-container" style="display: {{ $customReq == 'yes' ? 'block' : 'none' }};">
+                <div class="form-group" id="customization_details_container" style="display: {{ $customReq == 'yes' ? 'block' : 'none' }};">
                     <label for="customization_details" class="form-label">Customization Details <span style="color: var(--color-danger);">*</span></label>
-                    <textarea name="customization_details" id="customization_details" rows="3" class="form-control" style="height: auto;">{{ old('customization_details', $payload['customization_details'] ?? '') }}</textarea>
+                    <textarea name="customization_details" id="customization_details" rows="2" class="form-control" style="height: auto;" placeholder="Provide logo engraving, custom packaging, colors...">{{ old('customization_details', $payload['customization_details'] ?? '') }}</textarea>
                 </div>
 
                 <div class="form-group">
@@ -264,7 +277,7 @@
             <div style="margin-bottom: var(--spacing-6);">
                 <span class="badge badge-primary">Step 02</span>
                 <h2 style="font-size: var(--fs-xl); margin-top: var(--spacing-1);">Market Research</h2>
-                <p style="color: var(--color-text-secondary); font-size: var(--fs-sm);">Outline target marketplace focus, demand patterns, search keywords, and competitor listings.</p>
+                <p style="color: var(--color-text-secondary); font-size: var(--fs-sm);">Evaluate market size, growth velocity, and seasonality factors.</p>
             </div>
 
             <form action="{{ route('services.save_step', 'product-hunting') }}" method="POST">
@@ -272,12 +285,17 @@
                 <input type="hidden" name="step" value="2">
                 <input type="hidden" name="action" id="step-2-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="niche" class="form-label">Target Niche / Category <span style="color: var(--color-danger);">*</span></label>
+                        <input type="text" name="niche" id="niche" class="form-control" placeholder="e.g. Eco-friendly Cookware" value="{{ old('niche', $payload['niche'] ?? '') }}" required>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Research Market <span style="color: var(--color-danger);">*</span></label>
                         <div class="custom-multiselect-container" id="research_market_container">
                             <div class="custom-multiselect-trigger">
-                                <span class="multiselect-placeholder">Select research markets...</span>
+                                <span class="multiselect-placeholder">Select target countries...</span>
                             </div>
                             <div class="custom-multiselect-dropdown">
                                 @foreach(['USA', 'Canada', 'UK', 'UAE', 'Europe', 'Other'] as $mkt)
@@ -323,7 +341,7 @@
                     <textarea name="customer_segment" id="customer_segment" rows="2" class="form-control" style="height: auto;" placeholder="Provide demographic data, preferences..." required>{{ old('customer_segment', $payload['customer_segment'] ?? '') }}</textarea>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="target_price_min" class="form-label">Target Price Min ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="target_price_min" id="target_price_min" class="form-control" value="{{ old('target_price_min', $payload['target_price_min'] ?? '') }}" required>
@@ -386,7 +404,7 @@
                 <input type="hidden" name="step" value="3">
                 <input type="hidden" name="action" id="step-3-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="demand_level" class="form-label">Demand Level <span style="color: var(--color-danger);">*</span></label>
                         <select name="demand_level" id="demand_level" class="form-control" required>
@@ -415,7 +433,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="monthly_demand" class="form-label">Estimated Monthly Demand <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" name="monthly_demand" id="monthly_demand" class="form-control" value="{{ old('monthly_demand', $payload['monthly_demand'] ?? '') }}" required>
@@ -571,7 +589,7 @@
                 <input type="hidden" name="step" value="5">
                 <input type="hidden" name="action" id="step-5-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="est_product_cost" class="form-label">Estimated Product Cost ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="est_product_cost" id="est_product_cost" class="form-control calc-trigger" value="{{ old('est_product_cost', $payload['est_product_cost'] ?? '') }}" required>
@@ -586,7 +604,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="est_shipping_cost" class="form-label">Shipping Cost ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="est_shipping_cost" id="est_shipping_cost" class="form-control calc-trigger" value="{{ old('est_shipping_cost', $payload['est_shipping_cost'] ?? '') }}" required>
@@ -601,7 +619,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="est_advertising_cost" class="form-label">Advertising Cost ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="est_advertising_cost" id="est_advertising_cost" class="form-control calc-trigger" value="{{ old('est_advertising_cost', $payload['est_advertising_cost'] ?? '') }}" required>
@@ -619,7 +637,7 @@
                 <!-- Real-time Mathematical Calculation Card (SaaS theme) -->
                 <div class="card" style="background-color: var(--color-bg-base); padding: var(--spacing-5); margin-bottom: var(--spacing-4); border-color: var(--color-border);">
                     <h3 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--spacing-3);">Calculated Profitability (Estimate)</h3>
-                    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--spacing-3); text-align: center;">
+                    <div class="form-grid-5" style="text-align: center;">
                         <div>
                             <span style="font-size: 10px; text-transform: uppercase; color: var(--color-text-secondary);">Target Price</span>
                             <div style="font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--color-text-primary);" id="cal-price-display">
@@ -676,7 +694,7 @@
                 <input type="hidden" name="step" value="6">
                 <input type="hidden" name="action" id="step-6-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="validation_status" class="form-label">Validation Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="validation_status" id="validation_status" class="form-control" required>
@@ -696,7 +714,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-4">
                     <div class="form-group">
                         <label for="val_demand_score" class="form-label">Demand Score (0 - 100) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" min="0" max="100" name="val_demand_score" id="val_demand_score" class="form-control val-score-trigger" value="{{ old('val_demand_score', $payload['val_demand_score'] ?? '') }}" required>
@@ -719,7 +737,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Validation Checklist <span style="color: var(--color-danger);">*</span></label>
-                    <div class="selection-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                    <div class="selection-grid">
                         @foreach([
                             'Demand validated', 'Competition researched', 'Profit margin acceptable',
                             'Supplier availability confirmed', 'Target price achievable', 'Product quality acceptable',
@@ -735,7 +753,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="final_recommendation" class="form-label">Final Recommendation <span style="color: var(--color-danger);">*</span></label>
                         <select name="final_recommendation" id="final_recommendation" class="form-control" required>
@@ -785,7 +803,7 @@
                                     <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--color-primary);">Supplier #{{ $idx + 1 }}</h4>
                                     <button type="button" class="btn btn-secondary" style="color: var(--color-danger); height: 28px; padding: 0 var(--spacing-2);" onclick="removeSupplierCard(this)">Delete Supplier</button>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                                <div class="form-grid-3">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 11px;">Supplier Name *</label>
                                         <input type="text" name="supplier_records[{{ $idx }}][name]" class="form-control supplier-name-input" value="{{ $sup['name'] ?? '' }}" required style="height: 34px;">
@@ -803,7 +821,7 @@
                                         <input type="text" name="supplier_records[{{ $idx }}][country]" class="form-control" value="{{ $sup['country'] ?? '' }}" required style="height: 34px;">
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                                <div class="form-grid-3">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 11px;">Website *</label>
                                         <input type="url" name="supplier_records[{{ $idx }}][website]" class="form-control" value="{{ $sup['website'] ?? '' }}" required style="height: 34px;">
@@ -817,7 +835,7 @@
                                         <input type="email" name="supplier_records[{{ $idx }}][email]" class="form-control" value="{{ $sup['email'] ?? '' }}" required style="height: 34px;">
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                                <div class="form-grid-3">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 11px;">Phone *</label>
                                         <input type="text" name="supplier_records[{{ $idx }}][phone]" class="form-control" value="{{ $sup['phone'] ?? '' }}" required style="height: 34px;">
@@ -831,7 +849,7 @@
                                         <input type="number" name="supplier_records[{{ $idx }}][moq]" class="form-control" value="{{ $sup['moq'] ?? '' }}" required style="height: 34px;">
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                                <div class="form-grid-3">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 11px;">Unit Price ($) *</label>
                                         <input type="number" step="0.01" name="supplier_records[{{ $idx }}][unit_price]" class="form-control" value="{{ $sup['unit_price'] ?? '' }}" required style="height: 34px;">
@@ -848,7 +866,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                                <div class="form-grid-3">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 11px;">Private Label Available? *</label>
                                         <select name="supplier_records[{{ $idx }}][private_label]" class="form-control" required style="height: 34px;">
@@ -932,7 +950,7 @@
                                         Calculated Rating: {{ $calRatings['overall_score'] ?? '0.00' }}%
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--spacing-3);">
+                                <div class="form-grid-6">
                                     @foreach(['price' => 'Price', 'quality' => 'Quality', 'moq' => 'MOQ', 'lead_time' => 'Lead Time', 'communication' => 'Communication', 'reliability' => 'Reliability'] as $field => $label)
                                         <div class="form-group">
                                             <label class="form-label" style="font-size: 11px;">{{ $label }} (1-5)</label>
@@ -948,7 +966,7 @@
                         @endforeach
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                    <div class="form-grid-2">
                         <div class="form-group">
                             <label for="preferred_supplier" class="form-label">Preferred Supplier <span style="color: var(--color-danger);">*</span></label>
                             <select name="preferred_supplier" id="preferred_supplier" class="form-control" required>
@@ -1014,7 +1032,7 @@
                 </div>
 
                 <div id="sample-fields-container" style="display: {{ $sampReq == 'yes' ? 'block' : 'none' }};">
-                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label for="sample_supplier" class="form-label">Supplier <span style="color: var(--color-danger);">*</span></label>
                             <select name="sample_supplier" id="sample_supplier" class="form-control">
@@ -1034,7 +1052,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label for="sample_shipping_cost" class="form-label">Shipping Cost ($) <span style="color: var(--color-danger);">*</span></label>
                             <input type="number" step="0.01" name="sample_shipping_cost" id="sample_shipping_cost" class="form-control" value="{{ old('sample_shipping_cost', $payload['sample_shipping_cost'] ?? '') }}">
@@ -1049,7 +1067,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label for="sample_status" class="form-label">Sample Status <span style="color: var(--color-danger);">*</span></label>
                             <select name="sample_status" id="sample_status" class="form-control">
@@ -1097,7 +1115,7 @@
                 <input type="hidden" name="step" value="10">
                 <input type="hidden" name="action" id="step-10-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="inspection_status" class="form-label">Inspection Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="inspection_status" id="inspection_status" class="form-control" required>
@@ -1120,7 +1138,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Quality Checklist <span style="color: var(--color-danger);">*</span></label>
-                    <div class="selection-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                    <div class="selection-grid">
                         @foreach([
                             'Product Material', 'Product Size', 'Product Color',
                             'Product Functionality', 'Packaging', 'Labeling',
@@ -1153,7 +1171,7 @@
                     <textarea name="defect_details" id="defect_details" rows="3" class="form-control" style="height: auto;">{{ old('defect_details', $payload['defect_details'] ?? '') }}</textarea>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="final_quality_decision" class="form-label">Final Quality Decision <span style="color: var(--color-danger);">*</span></label>
                         <select name="final_quality_decision" id="final_quality_decision" class="form-control" required>
@@ -1192,7 +1210,7 @@
                 <input type="hidden" name="step" value="11">
                 <input type="hidden" name="action" id="step-11-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="neg_supplier" class="form-label">Supplier <span style="color: var(--color-danger);">*</span></label>
                         <select name="neg_supplier" id="neg_supplier" class="form-control" required>
@@ -1213,7 +1231,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="neg_initial_price" class="form-label">Initial Unit Price ($) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" step="0.01" name="neg_initial_price" id="neg_initial_price" class="form-control neg-trigger" value="{{ old('neg_initial_price', $payload['neg_initial_price'] ?? '') }}" required>
@@ -1224,7 +1242,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="neg_initial_moq" class="form-label">Initial MOQ <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" name="neg_initial_moq" id="neg_initial_moq" class="form-control neg-trigger" value="{{ old('neg_initial_moq', $payload['neg_initial_moq'] ?? '') }}" required>
@@ -1235,7 +1253,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="neg_initial_lead_time" class="form-label">Initial Lead Time (days) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" name="neg_initial_lead_time" id="neg_initial_lead_time" class="form-control" value="{{ old('neg_initial_lead_time', $payload['neg_initial_lead_time'] ?? '') }}" required>
@@ -1246,7 +1264,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="payment_terms" class="form-label">Payment Terms <span style="color: var(--color-danger);">*</span></label>
                         <input type="text" name="payment_terms" id="payment_terms" class="form-control" placeholder="e.g. 30% deposit, 70% before shipment" value="{{ old('payment_terms', $payload['payment_terms'] ?? '') }}" required>
@@ -1260,14 +1278,14 @@
                 <!-- Comparison summary widget -->
                 <div class="card" style="background-color: var(--color-bg-base); padding: var(--spacing-5); margin-bottom: var(--spacing-4); border-color: var(--color-border);">
                     <h3 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); margin-bottom: var(--spacing-3);">Negotiation Impact Summary</h3>
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-4); text-align: center;">
-                        <div style="border-right: 1px solid var(--color-border); padding-right: var(--spacing-3);">
+                    <div class="form-grid-2" style="text-align: center;">
+                        <div style="padding: var(--spacing-2);">
                             <span style="font-size: 10px; text-transform: uppercase; color: var(--color-text-secondary);">Unit Cost Saving</span>
                             <div style="font-size: var(--fs-xl); font-weight: var(--fw-bold); color: var(--color-success);" id="neg-saving-display">
                                 ${{ number_format(max(0, (float)(old('neg_initial_price', $payload['neg_initial_price'] ?? 0)) - (float)(old('neg_final_price', $payload['neg_final_price'] ?? 0))), 2) }}
                             </div>
                         </div>
-                        <div>
+                        <div style="padding: var(--spacing-2);">
                             <span style="font-size: 10px; text-transform: uppercase; color: var(--color-text-secondary);">MOQ Adjustment</span>
                             <div style="font-size: var(--fs-xl); font-weight: var(--fw-bold); color: var(--color-primary);" id="neg-moq-display">
                                 {{ (int)(old('neg_initial_moq', $payload['neg_initial_moq'] ?? 0)) }} → {{ (int)(old('neg_final_moq', $payload['neg_final_moq'] ?? 0)) }}
@@ -1304,7 +1322,7 @@
                 <input type="hidden" name="step" value="12">
                 <input type="hidden" name="action" id="step-12-action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="mfg_supplier" class="form-label">Selected Supplier <span style="color: var(--color-danger);">*</span></label>
                         <select name="mfg_supplier" id="mfg_supplier" class="form-control" required>
@@ -1325,7 +1343,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="mfg_quantity" class="form-label">Production Quantity <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" name="mfg_quantity" id="mfg_quantity" class="form-control mfg-trigger" value="{{ old('mfg_quantity', $payload['mfg_quantity'] ?? '') }}" required>
@@ -1342,7 +1360,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label for="mfg_start_date" class="form-label">Production Start Date <span style="color: var(--color-danger);">*</span></label>
                         <input type="date" name="mfg_start_date" id="mfg_start_date" class="form-control" value="{{ old('mfg_start_date', $payload['mfg_start_date'] ?? '') }}" required>
@@ -1361,7 +1379,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label class="form-label">Packaging Required? <span style="color: var(--color-danger);">*</span></label>
                         <div class="segmented-control">
@@ -1421,9 +1439,9 @@
             </div>
 
             <!-- Pricing / Sourcing Summary Card -->
-            <div class="card" style="background-color: var(--color-bg-base); padding: var(--spacing-6); margin-bottom: var(--spacing-6); border-color: var(--color-border);">
+            <div class="card" style="background-color: var(--color-bg-base); padding: var(--spacing-5); margin-bottom: var(--spacing-6); border-color: var(--color-border);">
                 <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold); margin-bottom: var(--spacing-4);">Sourcing Summary Checklist</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-4);">
+                <div class="form-grid-2">
                     <table style="width: 100%; border-collapse: collapse; font-size: var(--fs-sm);">
                         <tr style="border-bottom: 1px solid var(--color-border);">
                             <td style="padding: var(--spacing-2) 0; color: var(--color-text-secondary);">Product Name:</td>
@@ -1468,7 +1486,7 @@
                 <input type="hidden" name="step" value="13">
                 <input type="hidden" name="action" value="save_continue">
 
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                <div class="form-grid-2">
                     <div class="form-group">
                         <label for="final_approval_status" class="form-label">Final Approval Status <span style="color: var(--color-danger);">*</span></label>
                         <select name="final_approval_status" id="final_approval_status" class="form-control" required>
@@ -1580,7 +1598,7 @@
         </div>
 
         <!-- Calculations Grid -->
-        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-5); margin-bottom: var(--spacing-6);">
+        <div class="form-grid-4" style="margin-bottom: var(--spacing-6);">
             <div class="card" style="padding: var(--spacing-4); text-align: center;">
                 <span style="font-size: var(--fs-xs); color: var(--color-text-secondary); text-transform: uppercase;">Current Step</span>
                 <h4 style="font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-top: 2px; color: var(--color-primary);">Step {{ $currentStep }}</h4>
@@ -1716,6 +1734,22 @@
     let isEditMode = false;
     let editModeStep = null;
 
+    const stepNames = {
+        1: 'Product Requirements',
+        2: 'Market Research',
+        3: 'Demand Analysis',
+        4: 'Competitor Research',
+        5: 'Pricing & Profit',
+        6: 'Product Validation',
+        7: 'Supplier Research',
+        8: 'Supplier Comparison',
+        9: 'Sample Coordination',
+        10: 'Quality Check',
+        11: 'Price & MOQ Negotiation',
+        12: 'Manufacturing',
+        13: 'Final Approval'
+    };
+
     function openViewModal() {
         const modal = document.getElementById('view-details-modal');
         if (modal) {
@@ -1752,6 +1786,7 @@
             }
         }
     }
+
     // Initialize Custom Multiselects
     document.addEventListener('DOMContentLoaded', function() {
         initCustomMultiselect('target_market_container');
@@ -1809,10 +1844,17 @@
         stepperItems.forEach((item, idx) => {
             if (idx + 1 === stepNumber) {
                 item.classList.add('in-progress');
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             } else {
                 item.classList.remove('in-progress');
             }
         });
+
+        // Update mobile step indicator
+        const mobileIndicator = document.getElementById('mobile-step-name');
+        if (mobileIndicator && stepNames[stepNumber]) {
+            mobileIndicator.innerText = stepNames[stepNumber];
+        }
     }
 
     // Step 1 Customization toggle
@@ -1857,71 +1899,72 @@
         }
     }
 
-    // Step 4 Competitors dynamic row append
-    function addCompetitorRecordRow() {
-        const tableBody = document.querySelector('#competitors-table tbody');
-        const rows = tableBody.querySelectorAll('tr:not(.fallback-row)');
-        const nextIndex = rows.length;
-        
-        // Remove fallback row if exists
-        const fallback = tableBody.querySelector('.fallback-row');
-        if (fallback) fallback.remove();
+    // Step 4 Competitors dynamic card append
+    function addCompetitorCard() {
+        const container = document.getElementById('competitor-cards-container');
+        const cards = container.querySelectorAll('.competitor-entry-card');
+        const nextIndex = cards.length;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <input type="text" name="competitor_records[${nextIndex}][name]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="text" name="competitor_records[${nextIndex}][product_name]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="url" name="competitor_records[${nextIndex}][product_url]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="number" step="0.01" name="competitor_records[${nextIndex}][selling_price]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="number" step="0.1" min="0" max="5" name="competitor_records[${nextIndex}][rating]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="number" name="competitor_records[${nextIndex}][reviews]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="text" name="competitor_records[${nextIndex}][features]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <input type="text" name="competitor_records[${nextIndex}][position]" class="form-control" style="height: 32px; font-size: var(--fs-xs);" required>
-            </td>
-            <td>
-                <button type="button" class="btn btn-secondary" style="color: var(--color-danger); height: 28px; padding: 0 var(--spacing-2);" onclick="removeTableRow(this)">X</button>
-            </td>
+        const card = document.createElement('div');
+        card.className = 'card competitor-entry-card';
+        card.style.padding = 'var(--spacing-4)';
+        card.style.borderLeft = '4px solid var(--color-primary)';
+        card.setAttribute('data-index', nextIndex);
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-2); margin-bottom: var(--spacing-3);">
+                <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold);">Competitor #${nextIndex + 1}</h4>
+                <button type="button" class="btn btn-secondary" style="color: var(--color-danger); height: 26px; padding: 0 var(--spacing-2); font-size: 11px;" onclick="removeCompetitorCard(this)">Delete</button>
+            </div>
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Competitor Name *</label>
+                    <input type="text" name="competitor_records[${nextIndex}][name]" class="form-control" required style="height: 34px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Product URL *</label>
+                    <input type="url" name="competitor_records[${nextIndex}][url]" class="form-control" required style="height: 34px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Price ($) *</label>
+                    <input type="number" step="0.01" name="competitor_records[${nextIndex}][price]" class="form-control" required style="height: 34px;">
+                </div>
+            </div>
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Rating (0-5) *</label>
+                    <input type="number" step="0.1" min="0" max="5" name="competitor_records[${nextIndex}][rating]" class="form-control" required style="height: 34px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Reviews Count *</label>
+                    <input type="number" name="competitor_records[${nextIndex}][reviews]" class="form-control" required style="height: 34px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 11px;">Est. Monthly Sales *</label>
+                    <input type="number" name="competitor_records[${nextIndex}][est_sales]" class="form-control" required style="height: 34px;">
+                </div>
+            </div>
         `;
-        tableBody.appendChild(tr);
+        container.appendChild(card);
     }
 
-    function removeTableRow(btn) {
-        const tableBody = btn.closest('tbody');
-        btn.closest('tr').remove();
-        
-        // Re-index remaining inputs
-        const rows = tableBody.querySelectorAll('tr:not(.fallback-row)');
-        if (rows.length === 0) {
-            const fallback = document.createElement('tr');
-            fallback.className = 'fallback-row';
-            fallback.innerHTML = `<td colspan="9" style="text-align: center; color: var(--color-text-muted); font-size: var(--fs-xs); padding: var(--spacing-4);">No competitor records added. Click add below to append.</td>`;
-            tableBody.appendChild(fallback);
-        } else {
-            rows.forEach((tr, index) => {
-                tr.querySelectorAll('input').forEach(input => {
-                    const nameAttr = input.getAttribute('name');
-                    if (nameAttr) {
-                        const updatedName = nameAttr.replace(/\[\d+\]/, `[${index}]`);
-                        input.setAttribute('name', updatedName);
-                    }
-                });
-            });
+    function removeCompetitorCard(btn) {
+        const container = document.getElementById('competitor-cards-container');
+        const card = btn.closest('.competitor-entry-card');
+        if (card) {
+            card.remove();
         }
+        const cards = container.querySelectorAll('.competitor-entry-card');
+        cards.forEach((c, index) => {
+            c.querySelector('h4').innerText = `Competitor #${index + 1}`;
+            c.setAttribute('data-index', index);
+            c.querySelectorAll('input, select, textarea').forEach(input => {
+                const nameAttr = input.getAttribute('name');
+                if (nameAttr) {
+                    const updatedName = nameAttr.replace(/\[\d+\]/, `[${index}]`);
+                    input.setAttribute('name', updatedName);
+                }
+            });
+        });
     }
 
     // Step 5 Dynamic Sizing Calculator
@@ -1988,7 +2031,7 @@
                 <h4 style="font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--color-primary);">Supplier #${nextIndex + 1}</h4>
                 <button type="button" class="btn btn-secondary" style="color: var(--color-danger); height: 28px; padding: 0 var(--spacing-2);" onclick="removeSupplierCard(this)">Delete Supplier</button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+            <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label" style="font-size: 11px;">Supplier Name *</label>
                     <input type="text" name="supplier_records[${nextIndex}][name]" class="form-control supplier-name-input" required style="height: 34px;">
@@ -2009,7 +2052,7 @@
                     <input type="text" name="supplier_records[${nextIndex}][country]" class="form-control" required style="height: 34px;">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+            <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label" style="font-size: 11px;">Website *</label>
                     <input type="url" name="supplier_records[${nextIndex}][website]" class="form-control" required style="height: 34px;">
@@ -2023,7 +2066,7 @@
                     <input type="email" name="supplier_records[${nextIndex}][email]" class="form-control" required style="height: 34px;">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+            <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label" style="font-size: 11px;">Phone *</label>
                     <input type="text" name="supplier_records[${nextIndex}][phone]" class="form-control" required style="height: 34px;">
@@ -2037,7 +2080,7 @@
                     <input type="number" name="supplier_records[${nextIndex}][moq]" class="form-control" required style="height: 34px;">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+            <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label" style="font-size: 11px;">Unit Price ($) *</label>
                     <input type="number" step="0.01" name="supplier_records[${nextIndex}][unit_price]" class="form-control" required style="height: 34px;">
@@ -2054,7 +2097,7 @@
                     </select>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+            <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label" style="font-size: 11px;">Private Label Available? *</label>
                     <select name="supplier_records[${nextIndex}][private_label]" class="form-control" required style="height: 34px;">
