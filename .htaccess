@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct access to sensitive files and hidden files
+    <FilesMatch "^\.(env|git|editorconfig|gitignore|gitattributes)">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # Block direct access to sensitive system directories
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor)(/.*)?$ - [F,L,NC]
+    RewriteRule ^(composer\.(json|lock)|package\.json|package-lock\.json|artisan|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
+
+    # Send all other requests to the public directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
